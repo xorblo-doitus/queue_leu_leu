@@ -62,20 +62,20 @@ class Trail:
     delta = amout if amout != 0 else self._get_total_size() + 1 - len(self.trail)
     
     if delta > 0: 
-      self._i = self._wrapped(self._i - 1)
-      self._increase_trail(self._i, delta, self.trail[self._i], 
-                           self.trail[self._wrapped(self._i - 2)] if len(self.trail) > 1 else self.leader.xy)
+      away_from = self.trail[self._wrapped(self._i - 2)] if len(self.trail) > 1 else self.leader.xy
+      self._increase_trail(self._i, delta, self.trail[self._wrapped(self._i - 1)], away_from)
     elif delta < 0: self._decrease_trail(-delta)
 
   def _increase_trail(self, at, amount, position, away_from):
-    if self._i > at: self._i += amount
+    if self._i >= at: self._i += amount
     offset = position - away_from
     
     for i in range(amount): 
-      position += offset
+      position = position + offset
       self.trail.insert(at+i, position)
 
   def _decrease_trail(self, amount):
+    # TODO: a refaire, cela n'est pas possible en Java
     self.trail = [
       self.trail[i] for i in range(self._i - len(self.trail), self._i - amount)
     ]
