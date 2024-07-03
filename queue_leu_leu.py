@@ -76,7 +76,6 @@ class Trail:
 	
 	def _adapt_trail_len(self):
 		delta = math.ceil(self.get_total_size() / self.distance_between_pos) + 1 - len(self.trail)
-		print(delta)
 		
 		if delta > 0:
 			self._increase_trail(self._i - 1, delta, self.trail[self._wrapped(self._i - 1)])
