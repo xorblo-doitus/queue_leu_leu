@@ -118,7 +118,7 @@ class Trail:
 pygame.init()
 window = pygame.display.set_mode((500, 500), pygame.RESIZABLE)
 clock = pygame.time.Clock()
-trail = Trail(100, pygame.Vector2(100, 100), 5, 25)
+trail = Trail(10, pygame.Vector2(100, 100), 5, 25)
 font = pygame.font.SysFont('Arial', 16)
 
 
