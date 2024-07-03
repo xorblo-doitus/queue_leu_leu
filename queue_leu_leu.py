@@ -109,7 +109,7 @@ class Trail:
 		# window.blit(font.render("len(_trail_positions): " + str(self.trail_positions_count), False, 0xffffffff), (10, 50))
 		
 		for i, t in enumerate(self.followers):
-			pygame.draw.circle(window, (255*i/len(self.followers), 100, 0), t.xy.xy, t.size)
+			pygame.draw.circle(window, (0, 255*i/len(self.followers), 255), t.xy.xy, t.size)
 		
 		for pos in self.trail:
 			pygame.draw.circle(window, (255, 0, 0), pos.xy, 3)
