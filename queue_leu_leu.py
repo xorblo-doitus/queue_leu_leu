@@ -63,13 +63,19 @@ class Trail:
 		delta = math.ceil(self.get_total_size() / self.distance_between_pos) + 1 - len(self.trail)
 		
 		if delta > 0:
-			self._increase_trail(self._i - 1, delta, self.trail[self._wrapped(self._i - 1)])
+			self._increase_trail(self._i, delta, self.trail[self._wrapped(self._i - 1)], self.trail[self._wrapped(self._i - 2)])
 		elif delta < 0:
 			self._decrease_trail(-delta)
 	
-	def _increase_trail(self, at, amount, position):
-		for _ in range(amount): self.trail.insert(at, position)
-		if self._i > at: self._i += amount
+	def _increase_trail(self, at: int, amount: int, position: pygame.Vector2, away_from: pygame.Vector2):
+		displacement: pygame.Vector2 = position - away_from
+		
+		if self._i >= at: self._i += amount
+		
+		for _ in range(amount):
+			position = position + displacement
+			self.trail.insert(at, position)
+			at += 1
 	
 	def _decrease_trail(self, amount):
 		self.trail = [
