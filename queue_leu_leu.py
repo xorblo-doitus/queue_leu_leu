@@ -15,11 +15,6 @@ class Trail:
 		self.trail: list[pygame.Vector2] = [self.leader.xy]
 		
 		self._adapt_trail_len()
-		# self._increase_trail(
-		# 	0,
-		# 	math.ceil(self.get_total_size() / self.distance_between_pos) + 1 - len(self.trail),
-		# 	self.leader.xy
-		# )
 
 	def update_leader_pos(self, new_position):
 		self.leader.xy = new_position
@@ -48,23 +43,13 @@ class Trail:
 
 	def add_follower(self, xy, size):
 		self.followers.append(TrailElement(xy, size))
-		
 		self._adapt_trail_len()
-		
 		self.update_trail()
-		# self._increase_trail(
-		# 	self._wrapped(self._i - 1),
-		# 	math.ceil(self.get_total_size() / self.distance_between_pos) + 1 - len(self.trail),
-		# 	self.trail[self._wrapped(self._i - 1)]
-		# )
 
 	def remove_follower(self, index=-1):
 		if self.followers:
-			element = self.followers.pop(index)
-
+			self.followers.pop(index)
 			self._adapt_trail_len()
-			# to_remove = len(self.trail) - 1 - math.ceil(self.get_total_size() / self.distance_between_pos)
-
 			self.update_trail()
 	
 	def resize_follower(self, index: int, new_size: float):
