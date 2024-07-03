@@ -121,7 +121,6 @@ while run:
 		if keys[pygame.K_BACKSPACE] and trail.followers:
 			trail.remove_follower(random.randint(0, len(trail.followers)-1))
 			pygame.time.delay(100)
-			pygame.time.delay(100)
 		if keys[pygame.K_KP_PLUS] and trail.followers:
 			trail.resize_follower(random.randint(0, len(trail.followers)-1), random.randint(32, 64))
 			pygame.time.delay(100)
