@@ -16,23 +16,15 @@ class Trail:
     self.trail: list[pygame.Vector2] = [self.leader.xy]
 
   def update_pos(self, new_position):
-    if self.distance != self._last_distance:
-      self._last_distance = self.distance
-      self._adapt_trail()
-    
+    self.check_trail()
     self.leader.xy = new_position
     current_pos = self.trail[self._i]
-    if self.distance < 1: self.distance = 1 
     
     while self.trail[self._i].distance_to(new_position) >= self._get_distance():
       current_pos = current_pos.move_towards(new_position, self._get_distance())
       self._i = self._wrapped(self._i - 1)
       self.trail[self._i] = current_pos
-      
-    total = sum(map(lambda f: f.size, self.followers))
-    if total != self.total_size: 
-      self.total_size = total
-      self._adapt_trail()
+
     self.update_trail()
     
   def update_trail(self):
@@ -44,6 +36,13 @@ class Trail:
       i += size
       follower.xy = self.trail[self._wrapped(int(i % tsize))]
       i += size
+      
+  def check_trail(self):
+    total = sum(map(lambda f: f.size, self.followers))
+    if self.distance != self._last_distance or total != self.total_size:
+      self._last_distance = self.distance
+      self.total_size = total
+      self._adapt_trail()    
 
   def add_follower(self, xy, size):
     self.followers.append(TrailElement(xy, size))
