@@ -1,5 +1,6 @@
 # You can use any other library that includes standard Vector things
 from pygame import Vector2
+from math import ceil
 
 
 class TrailElement:
@@ -9,17 +10,17 @@ class TrailElement:
 
 
 class Trail:
-  def __init__(self, distance: float, leader: TrailElement, precise=False, stack=False):
+  def __init__(self, distance: float, leader: TrailElement, precise=False, elastic=False):
     self.leader = leader
     self.followers: list[TrailElement] = []
     self.trail = [self.leader.pos]
     self.distance = distance
     self.__last_distance = self.distance
-    self.__total_size = self.leader.size
+    self.__total_size = 0
     self.__i = 0
     
     if precise: self.update_trail = self.update_trail_precise
-    if stack: self.update_pos = self.update_pos_stack
+    if elastic: self.update_pos = self.update_pos_elastic
 
   def update_pos(self, new_pos: Vector2):
     self.check_trail()
@@ -34,7 +35,7 @@ class Trail:
 
     self.update_trail()
     
-  def update_pos_stack(self, new_pos: Vector2):
+  def update_pos_elastic(self, new_pos: Vector2):
     self.check_trail()
     
     self.leader.pos = new_pos
@@ -45,11 +46,11 @@ class Trail:
     self.update_trail()
     
   def update_trail(self):
-    i = self.__i + self.calculate_size(self.leader.size)/2
+    i = self.__i + ceil((self.leader.size + self.get_distance()) / self.get_distance())
     tsize = len(self.trail)
     
     for follower in self.followers:
-      size = self.calculate_size(follower.size)/2
+      size = ceil((follower.size + self.get_distance()) / self.get_distance())
       i += size
       follower.pos = self.trail[self._wrapped(int(i % tsize))] 
       i += size
@@ -78,7 +79,7 @@ class Trail:
   def add_follower(self, follower: TrailElement):
     self.followers.append(follower)
     self.__total_size += follower.size
-    self.adapt_trail(self.calculate_size(follower.size))
+    self.adapt_trail()
 
   def pop_follower(self, index: int=-1):
     self.remove_follower(self.followers[index])
@@ -87,10 +88,10 @@ class Trail:
     if self.followers:
       self.followers.remove(follower)
       self.__total_size -= follower.size
-      self.adapt_trail(-self.calculate_size(follower.size))
+      self.adapt_trail()
 
-  def adapt_trail(self, amout: int=0):
-    delta = amout if amout != 0 else self.get_total_size() + 1 - len(self.trail)
+  def adapt_trail(self):
+    delta = self.get_total_size() - len(self.trail)
     
     if delta > 0: 
       away_from = self.trail[self._wrapped(self.__i - 2)] if len(self.trail) > 1 else self.leader.pos
@@ -112,16 +113,15 @@ class Trail:
     ]
     self.__i = 0
 
-  def calculate_size(self, size: float) -> int:
-    return int((size + self.get_distance()) / self.get_distance() * 2)
+  def calculate_size(self, size: float) -> float:
+    return (2 * size + self.get_distance()) / self.get_distance()
   
   def get_distance(self) -> int:
     if self.distance < 1: self.distance = 1
     return self.distance
   
   def get_total_size(self) -> int:
-    return (self.calculate_size(self.leader.size) + 
-            sum(map(lambda f: self.calculate_size(f.size), self.followers)))
+    return int(self.leader.size + sum(map(lambda f: self.calculate_size(f.size), self.followers)))
 
   def get_leader_index(self):
     return self.__i

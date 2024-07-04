@@ -60,7 +60,7 @@ class Trail:
 		return i % len(self.trail)
 	
 	def _adapt_trail_len(self):
-		delta = math.ceil(self.get_total_size() / self.distance_between_pos) + 1 - len(self.trail)
+		delta = self.get_total_size() - len(self.trail)
 		
 		if delta > 0:
 			self._increase_trail(self._i, delta, self.trail[self._wrapped(self._i - 1)], self.trail[self._wrapped(self._i - 2)])
@@ -91,7 +91,7 @@ class Trail:
 		return self._get_lenght(size) / self.distance_between_pos
 	
 	def get_total_size(self):
-		return self.leader.size + self.spacing * len(self.followers) + 2 * sum(map(lambda element: element.size, self.followers))
+		return int(self.leader.size + sum(map(lambda element: self._get_lenght_in_trail(element.size), self.followers)))
 	
 	def draw(self):
 		#debug
@@ -109,7 +109,7 @@ class Trail:
 pygame.init()
 window = pygame.display.set_mode((500, 500), pygame.RESIZABLE)
 clock = pygame.time.Clock()
-trail = Trail(10, pygame.Vector2(100, 100), 5, 25)
+trail = Trail(16, pygame.Vector2(100, 100), 5, 16)
 font = pygame.font.SysFont('Arial', 16)
 
 
@@ -122,7 +122,7 @@ while run:
 
 		keys = pygame.key.get_pressed()
 		if keys[pygame.K_RETURN]:
-			trail.add_follower(pygame.Vector2(100, 100), random.randint(6, 30))
+			trail.add_follower(pygame.Vector2(100, 100), random.randint(6, 60))
 			pygame.time.delay(100)
 		if keys[pygame.K_BACKSPACE] and trail.followers:
 			trail.remove_follower(random.randint(0, len(trail.followers)-1))

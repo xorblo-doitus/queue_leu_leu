@@ -17,11 +17,10 @@ class TrailExample(Trail):
       )
       for i, t in enumerate(things):
         window.blit(font.render(t, False, 0xffffffff), (10, 10+20*i))
-    
-    pygame.draw.circle(window, (255, 0, 0), self.leader.pos, 5)
-    
+
     for i, t in enumerate(self.followers):
       pygame.draw.circle(window, (0, 255*i/fsize, 255), t.pos, t.size)
+    pygame.draw.circle(window, (255, 0, 0), self.leader.pos, 5)
 
     if debug:
       for p in self.trail:
@@ -39,7 +38,7 @@ class TrailExample(Trail):
       
     elif keys[pygame.K_RSHIFT]:
       for f in trail.followers:
-        f.size = random.randint(6, 50)
+        f.size = random.randint(6, 60)
       return True
       
     elif keys[pygame.K_EQUALS]:
