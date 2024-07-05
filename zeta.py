@@ -19,7 +19,9 @@ class Trail:
     self.__total_size = 0
     self.__i = 0
     
-    if precise: self.update_trail = self.update_trail_precise
+    if precise: 
+      self.update_trail = self.update_trail_precise
+      self.calculate_size = self.calculate_size_precise
     if elastic: self.update_pos = self.update_pos_elastic
 
   def update_pos(self, new_pos: Vector2):
@@ -46,11 +48,11 @@ class Trail:
     self.update_trail()
     
   def update_trail(self):
-    i = self.__i + ceil((self.leader.size + self.get_distance()) / self.get_distance())
+    i = self.__i + int(self.calculate_size(self.leader.size)/2)
     tsize = len(self.trail)
     
     for follower in self.followers:
-      size = ceil((follower.size + self.get_distance()) / self.get_distance())
+      size = int(self.calculate_size(follower.size)/2)
       i += size
       follower.pos = self.trail[self._wrapped(int(i % tsize))] 
       i += size
@@ -113,7 +115,10 @@ class Trail:
     ]
     self.__i = 0
 
-  def calculate_size(self, size: float) -> float:
+  def calculate_size(self, size: float) -> int:
+    return int((size + self.get_distance()) / self.get_distance() * 2)
+
+  def calculate_size_precise(self, size: float) -> float:
     return (2 * size + self.get_distance()) / self.get_distance()
   
   def get_distance(self) -> int:

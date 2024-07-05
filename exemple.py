@@ -57,7 +57,7 @@ window = pygame.display.set_mode((500, 500), pygame.RESIZABLE)
 clock = pygame.time.Clock()
 font = pygame.font.SysFont('Consolas', 16)
 
-trail = TrailExample(16, TrailElement(pygame.Vector2(100, 100), 5), True)
+trail = TrailExample(16, TrailElement(pygame.Vector2(100, 100), 5))
 run = True
 while run:
     clock.tick(60)
