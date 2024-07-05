@@ -1,143 +1,163 @@
-import math, pygame, random
+# You can use any other library that includes standard Vector things
+from pygame import Vector2
+
 
 class TrailElement:
-	def __init__(self, xy: pygame.Vector2, size: float):
-		self.xy = xy
-		self.size = size
+  def __init__(self, pos: Vector2, size: float):
+    self.pos = pos
+    self.size = size
+
 
 class Trail:
-	def __init__(self, distance_between_pos, leader_pos, leader_size, spacing):
-		self.leader = TrailElement(leader_pos, leader_size)
-		self.followers: list[TrailElement] = []
-		self.distance_between_pos = distance_between_pos
-		self.spacing = spacing
-		self._i = 0
-		self.trail: list[pygame.Vector2] = [self.leader.xy]
-		
-		self._adapt_trail_len()
+  def __init__(self, distance: float, leader: TrailElement, precise=False, elastic=False):
+    """
+    When precise=True, a lerp is performed between points to get a smooth movement. \n
+    When elastic=True, the trail points will gradually reach the leader point. So 'distance' become 'speed'.\n
+    Note: the elastic effect is already precise, so it will always False.
+    """
+    self.leader = leader
+    self.followers: list[TrailElement] = []
+    self.trail = [self.leader.pos]
+    self.distance = distance
+    self.__last_distance = self.distance
+    self.__total_size = 0
+    self.__i = 0
 
-	def update_leader_pos(self, new_position):
-		self.leader.xy = new_position
-		
-		current_pos = self.trail[self._i]
-		while self.trail[self._i].distance_to(new_position) >= self.distance_between_pos:
-			current_pos = current_pos.move_towards(new_position, self.distance_between_pos)
-			self._i = self._wrapped(self._i - 1)
-			self.trail[self._i] = current_pos
-			
-		self.update_trail()
-		
-	def update_trail(self):
-		trail_advancment: float = self.leader.size + self.spacing - self.leader.xy.distance_to(self.trail[self._i])
-		tsize = len(self.trail)
-		
-		for follower in self.followers:
-			trail_advancment += follower.size
-			i_advancement: float = self._i + trail_advancment / self.distance_between_pos
-			follower.xy = pygame.Vector2.lerp(
-				self.trail[self._wrapped(math.ceil(i_advancement % tsize))],
-				self.trail[self._wrapped(int(i_advancement % tsize))] if trail_advancment >= 0 else self.leader.xy,
-				1 - (i_advancement % 1)
-			)
-			trail_advancment += follower.size + self.spacing
+    if elastic:
+      self.update_pos = self.update_pos_elastic
+      precise = False # disable this to avoid
+    if precise:
+      self.update_trail = self.update_trail_precise
+      self.get_size = self.get_size_precise
 
-	def add_follower(self, xy, size):
-		self.followers.append(TrailElement(xy, size))
-		self._adapt_trail_len()
-		self.update_trail()
+  def update_pos(self, new_pos: Vector2):
+    """Update the position of the leader"""
+    self.check_trail()
 
-	def remove_follower(self, index=-1):
-		if self.followers:
-			self.followers.pop(index)
-			self._adapt_trail_len()
-			self.update_trail()
-	
-	def resize_follower(self, index: int, new_size: float):
-		self.followers[index].size = new_size
-		self._adapt_trail_len()
-	
-	def _wrapped(self, i):
-		return i % len(self.trail)
-	
-	def _adapt_trail_len(self):
-		delta = self.get_total_size() - len(self.trail)
-		
-		if delta > 0:
-			self._increase_trail(self._i, delta, self.trail[self._wrapped(self._i - 1)], self.trail[self._wrapped(self._i - 2)])
-		elif delta < 0:
-			self._decrease_trail(-delta)
-	
-	def _increase_trail(self, at: int, amount: int, position: pygame.Vector2, away_from: pygame.Vector2):
-		displacement: pygame.Vector2 = position - away_from
-		
-		if self._i >= at: self._i += amount
-		
-		for _ in range(amount):
-			position = position + displacement
-			self.trail.insert(at, position)
-			at += 1
-	
-	def _decrease_trail(self, amount):
-		self.trail = [
-			self.trail[i]
-			for i in range(self._i - len(self.trail), self._i - amount)
-		]
-		self._i = 0
-	
-	def _get_lenght(self, size):
-		return 2 * size + self.spacing
-	
-	def _get_lenght_in_trail(self, size):
-		return self._get_lenght(size) / self.distance_between_pos
-	
-	def get_total_size(self):
-		return int(self.leader.size + sum(map(lambda element: self._get_lenght_in_trail(element.size), self.followers)))
-	
-	def draw(self):
-		#debug
-		window.blit(font.render(f"_i: {self._i} / {len(self.trail)}", False, 0xffffffff), (10, 10))
-		window.blit(font.render("len(_trail_elements): " + str(len(self.followers)), False, 0xffffffff), (10, 30))
-		# window.blit(font.render("len(_trail_positions): " + str(self.trail_positions_count), False, 0xffffffff), (10, 50))
-		
-		for i, t in enumerate(self.followers):
-			pygame.draw.circle(window, (0, 255*i/len(self.followers), 255), t.xy.xy, t.size)
-		
-		for pos in self.trail:
-			pygame.draw.circle(window, (255, 0, 0), pos.xy, 3)
+    self.leader.pos = new_pos
+    current_pos = self.trail[self.__i]
 
+    while self.trail[self.__i].distance_to(new_pos) >= self.get_distance():
+      current_pos = current_pos.move_towards(new_pos, self.get_distance())
+      self.__i = self._wrapped(self.__i - 1)
+      self.trail[self.__i] = current_pos
 
-pygame.init()
-window = pygame.display.set_mode((500, 500), pygame.RESIZABLE)
-clock = pygame.time.Clock()
-trail = Trail(16, pygame.Vector2(100, 100), 5, 16)
-font = pygame.font.SysFont('Arial', 16)
+    self.update_trail()
 
+  def update_pos_elastic(self, new_pos: Vector2):
+    self.check_trail()
 
-run = True
-while run:
-		clock.tick(60)
-		for event in pygame.event.get():
-				if event.type == pygame.QUIT:
-						run = False
+    self.leader.pos = new_pos
+    current_pos = self.trail[self.__i].move_towards(new_pos, self.get_distance())
+    self.__i = self._wrapped(self.__i - 1)
+    self.trail[self.__i] = current_pos
 
-		keys = pygame.key.get_pressed()
-		if keys[pygame.K_RETURN]:
-			trail.add_follower(pygame.Vector2(100, 100), random.randint(6, 60))
-			pygame.time.delay(100)
-		if keys[pygame.K_BACKSPACE] and trail.followers:
-			trail.remove_follower(random.randint(0, len(trail.followers)-1))
-			pygame.time.delay(100)
-		if keys[pygame.K_KP_PLUS] and trail.followers:
-			trail.resize_follower(random.randint(0, len(trail.followers)-1), random.randint(32, 64))
-			pygame.time.delay(100)
-		if keys[pygame.K_KP_MINUS] and trail.followers:
-			trail.resize_follower(random.randint(0, len(trail.followers)-1), random.randint(2, 4))
-			pygame.time.delay(100)
+    self.update_trail()
 
-		trail.update_leader_pos(pygame.Vector2(pygame.mouse.get_pos()))
-		window.fill(0)
-		trail.draw()
-		pygame.draw.circle(window, (255, 0, 0), pygame.mouse.get_pos(), 5)
-		pygame.display.flip()
+  def update_trail(self):
+    """Update the trail"""
+    i = self.__i + self.get_size(self.leader)/2
+    tsize = len(self.trail)
 
-pygame.quit()
+    for follower in self.followers:
+      size = self.get_size(follower)/2
+      i += size
+      follower.pos = self.trail[self._wrapped(int(i % tsize))]
+      i += size
+
+  def update_trail_precise(self):
+    i = self.leader.size + self.get_distance() - self.leader.pos.distance_to(self.trail[self.__i])
+    tsize = len(self.trail)
+
+    for follower in self.followers:
+      i += follower.size
+      offset = self.__i + i / self.distance
+      follower.pos = Vector2.lerp(  # vvv equivalent of ceil()
+        self.trail[self._wrapped(int(-(-(offset % tsize)//1)))],
+        self.trail[self._wrapped(int(offset % tsize))] if i >= 0 else self.leader.pos,
+        1 - (offset % 1)
+      )
+      i += follower.size + self.get_distance()
+
+  def check_trail(self):
+    """
+    Check the trail and
+    recalculate it when .distance has changed or if one of the followers changed of size.
+    """
+    total = sum(map(lambda f: f.size, self.followers))
+    if self.distance != self.__last_distance or total != self.__total_size:
+      self.__last_distance = self.distance
+      self.__total_size = total
+      self.adapt_trail()
+
+  def add_follower(self, follower: TrailElement):
+    """Add a new follower in the trail"""
+    self.followers.append(follower)
+    self.__total_size += follower.size
+    self.adapt_trail()
+
+  def pop_follower(self, index: int=-1):
+    self.remove_follower(self.followers[index])
+
+  def remove_follower(self, follower: TrailElement):
+    """Remove a follower of the trail"""
+    if self.followers:
+      self.followers.remove(follower)
+      self.__total_size -= follower.size
+      self.adapt_trail()
+
+  def adapt_trail(self):
+    """
+    Automatically adapt the trail. \n
+    Must be used instead of .increase_trail() and .decrease_trail().
+    """
+    delta = self.get_total_size() + 1 - len(self.trail)
+
+    if delta > 0:
+      away_from = self.trail[self._wrapped(self.__i - 2)] if len(self.trail) > 1 else self.leader.pos
+      self.increase_trail(self.__i, delta, self.trail[self._wrapped(self.__i - 1)], away_from)
+    elif delta < 0: self.decrease_trail(-delta)
+
+  def increase_trail(self, at: int, amount: int, position: Vector2, away_from: Vector2):
+    """
+    Increase the trail 'at' an index, of an 'amount' of points with a dest 'position'
+    and an 'await_from' position.
+    """
+    if self.__i >= at: self.__i += amount
+    offset = position - away_from
+
+    for i in range(amount):
+      position = position + offset
+      self.trail.insert(at+i, position)
+
+  def decrease_trail(self, amount: int):
+    """Remove an 'amount' of points at end of the trail"""
+    # TODO: a refaire, cela n'est pas possible en Java
+    self.trail = [
+      self.trail[i] for i in range(self.__i - len(self.trail), self.__i - amount)
+    ]
+    self.__i = 0
+
+  def get_size(self, follower: TrailElement) -> int:
+    """Get the size of a follower (in the trail)"""
+    return int((follower.size + self.get_distance()) / self.get_distance() * 2)
+
+  def get_size_precise(self, follower: TrailElement) -> float:
+    return (2 * follower.size + self.get_distance()) / self.get_distance()
+
+  def get_distance(self) -> int:
+    """Security to never get a distance less than 0"""
+    if self.distance < 1: self.distance = 1
+    return self.distance
+
+  def get_total_size(self) -> int:
+    """Get the total size of the trail"""
+    return int(self.get_size(self.leader) + sum(map(lambda f: self.get_size(f), self.followers)))
+
+  def get_leader_index(self):
+    """Get the leader index in the trail"""
+    return self.__i
+
+  def _wrapped(self, i: int) -> int:
+    """Cyclic index of the trail"""
+    return i % len(self.trail)

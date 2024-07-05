@@ -1,4 +1,4 @@
-from zeta import Trail, TrailElement
+from queue_leu_leu import Trail, TrailElement
 import pygame, random
 
 
@@ -57,7 +57,8 @@ window = pygame.display.set_mode((500, 500), pygame.RESIZABLE)
 clock = pygame.time.Clock()
 font = pygame.font.SysFont('Consolas', 16)
 
-trail = TrailExample(16, TrailElement(pygame.Vector2(100, 100), 5))
+trail = TrailExample(16, TrailElement(pygame.Vector2(100, 100), 5),
+                     precise=True, elastic=False) # options
 run = True
 while run:
     clock.tick(60)
