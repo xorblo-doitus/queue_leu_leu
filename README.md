@@ -3,10 +3,10 @@ Collection of Python scripts, showing minimal examples of objects following each
 
 
 ### Content
-* [arc follow](https://github.com/xorblo-doitus/queue_leu_leu/blob/main/arc)
-* [joint follow](https://github.com/xorblo-doitus/queue_leu_leu/blob/main/joint)
-* [orbit follow](https://github.com/xorblo-doitus/queue_leu_leu/blob/main/orbit)
-* [trail follow](https://github.com/xorblo-doitus/queue_leu_leu/blob/main/trail)
+* [arc follow](https://github.com/xorblo-doitus/queue_leu_leu/tree/main/src/queue_leu_leu/arc)
+* [joint follow](https://github.com/xorblo-doitus/queue_leu_leu/tree/main/src/queue_leu_leu/joint)
+* [orbit follow](https://github.com/xorblo-doitus/queue_leu_leu/tree/main/src/queue_leu_leu/orbit)
+* [trail follow](https://github.com/xorblo-doitus/queue_leu_leu/tree/main/src/queue_leu_leu/trail)
 
 
 ### Installation
