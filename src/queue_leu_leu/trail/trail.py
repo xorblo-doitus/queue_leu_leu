@@ -2,21 +2,25 @@
 from pygame import Vector2
 
 
-class TrailElement:
+class TrailFollowElement:
   def __init__(self, pos: Vector2, size: float):
     self.pos = pos
     self.size = size
 
 
-class Trail:
-  def __init__(self, distance: float, leader: TrailElement, precise=False, elastic=False):
+class TrailFollow:
+  def __init__(self, distance: float, leader: TrailFollowElement, precise=False, elastic=False):
     """
-    When precise=True, a lerp is performed between points to get a smooth movement. \n
-    When elastic=True, the trail points will gradually reach the leader point. So 'distance' become 'speed'.\n
-    Note: the elastic effect is already precise, so it will always False.
+    :param distance: distance between each followers (must never be less than 1)
+    :param leader: the leader
+    :param precise: when True, a lerp is performed between points to get a smooth movement
+    :param elastic: when True, the trail points will gradually reach the leader point. 
+    So 'distance' become 'speed'.
+    
+    Note: the elastic effect is already precise, so 'precise' will be always False.
     """
     self.leader = leader
-    self.followers: list[TrailElement] = []
+    self.followers: list[TrailFollowElement] = []
     self.trail = [self.leader.pos]
     self.distance = distance
     self.__last_distance = self.distance
@@ -25,7 +29,7 @@ class Trail:
 
     if elastic:
       self.update_pos = self.update_pos_elastic
-      precise = False # disable this to avoid
+      precise = False # disable this to avoid trail problems
     if precise:
       self.update_trail = self.update_trail_precise
       self.get_size = self.get_size_precise
@@ -71,7 +75,7 @@ class Trail:
 
     for follower in self.followers:
       i += follower.size
-      offset = self.__i + i / self.distance
+      offset = self.__i + i / self.get_distance()
       follower.pos = Vector2.lerp(  # vvv equivalent of ceil()
         self.trail[self._wrapped(int(-(-(offset % tsize)//1)))],
         self.trail[self._wrapped(int(offset % tsize))] if i >= 0 else self.leader.pos,
@@ -85,12 +89,12 @@ class Trail:
     recalculate it when .distance has changed or if one of the followers changed of size.
     """
     total = sum(map(lambda f: f.size, self.followers))
-    if self.distance != self.__last_distance or total != self.__total_size:
-      self.__last_distance = self.distance
+    if self.get_distance() != self.__last_distance or total != self.__total_size:
+      self.__last_distance = self.get_distance()
       self.__total_size = total
       self.adapt_trail()
 
-  def add_follower(self, follower: TrailElement):
+  def add_follower(self, follower: TrailFollowElement):
     """Add a new follower in the trail"""
     self.followers.append(follower)
     self.__total_size += follower.size
@@ -99,7 +103,7 @@ class Trail:
   def pop_follower(self, index: int=-1):
     self.remove_follower(self.followers[index])
 
-  def remove_follower(self, follower: TrailElement):
+  def remove_follower(self, follower: TrailFollowElement):
     """Remove a follower of the trail"""
     if self.followers:
       self.followers.remove(follower)
@@ -132,17 +136,16 @@ class Trail:
 
   def decrease_trail(self, amount: int):
     """Remove an 'amount' of points at end of the trail"""
-    # TODO: a refaire, cela n'est pas possible en Java
     self.trail = [
       self.trail[i] for i in range(self.__i - len(self.trail), self.__i - amount)
     ]
     self.__i = 0
 
-  def get_size(self, follower: TrailElement) -> int:
+  def get_size(self, follower: TrailFollowElement) -> int:
     """Get the size of a follower (in the trail)"""
     return int((follower.size + self.get_distance()) / self.get_distance() * 2)
 
-  def get_size_precise(self, follower: TrailElement) -> float:
+  def get_size_precise(self, follower: TrailFollowElement) -> float:
     return (2 * follower.size + self.get_distance()) / self.get_distance()
 
   def get_distance(self) -> int:
