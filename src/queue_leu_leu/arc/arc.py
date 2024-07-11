@@ -31,6 +31,7 @@ class ArcFollow:
     
     self.leader.pos = new_pos
     ring = 0
+    size = 0
     self.rings.clear()
 
     for i, f in enumerate(self.followers):

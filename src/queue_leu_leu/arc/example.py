@@ -13,8 +13,8 @@ class ArcFollowExample(ArcFollow):
     if debug:
       things = (
         "Followers "+str(fsize),
+        "Distance  "+str(self.distance),
         "Radius    "+str(self.radius),
-        "Angle     "+str(self.distance),
         "Sides     "+str(self.max_angle),
         "Rotation  "+str(self.rotation),
       )

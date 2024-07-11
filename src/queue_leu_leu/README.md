@@ -6,6 +6,7 @@ Collection of Python scripts, showing minimal examples of objects following each
 * [arc follow](arc)
 * [joint follow](joint)
 * [orbit follow](orbit)
+* [square follow](square)
 * [trail follow](trail)
 
 

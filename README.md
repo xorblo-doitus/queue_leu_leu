@@ -6,6 +6,7 @@ Collection of Python scripts, showing minimal examples of objects following each
 * [arc follow](https://github.com/xorblo-doitus/queue_leu_leu/tree/main/src/queue_leu_leu/arc)
 * [joint follow](https://github.com/xorblo-doitus/queue_leu_leu/tree/main/src/queue_leu_leu/joint)
 * [orbit follow](https://github.com/xorblo-doitus/queue_leu_leu/tree/main/src/queue_leu_leu/orbit)
+* [square follow](https://github.com/xorblo-doitus/queue_leu_leu/tree/main/src/queue_leu_leu/square)
 * [trail follow](https://github.com/xorblo-doitus/queue_leu_leu/tree/main/src/queue_leu_leu/trail)
 
 

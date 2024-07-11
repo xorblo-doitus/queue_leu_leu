@@ -1,9 +1,9 @@
-# Orbit Follow
-Followers will turn around the leader (in orbit), in multiple rings if necessary.
+# Square Follow
+Like [orbit follow](../orbit/) but in square
 
 
 ### How to use
-Just run the script [example.py](example.py) or use the command: ``python -m queue_leu_leu.orbit``
+Just run the script [example.py](example.py) or use the command: ``python -m queue_leu_leu.square``
 
 
 ### Keybinds

@@ -1,12 +1,12 @@
-try: from .orbit import OrbitFollow, OrbitFollowElement, SPEED_SCALE
+try: from .square import SquareFollow, SquareFollowElement, SPEED_SCALE
 except ImportError:
-  from orbit import OrbitFollow, OrbitFollowElement, SPEED_SCALE
+  from square import SquareFollow, SquareFollowElement, SPEED_SCALE
 import pygame, random, math
 
 SPEED_SCALE_RATIO = SPEED_SCALE.as_integer_ratio()
 
 
-class OrbitFollowExample(OrbitFollow):
+class SquareFollowExample(SquareFollow):
   """Inherit the OrbitFollow class to draw elements and handle keyboard"""
 
   def draw(self, debug=True):
@@ -32,41 +32,41 @@ class OrbitFollowExample(OrbitFollow):
 
   def handle_keyboard(self, keys):
     if keys[pygame.K_RETURN]:
-      orbit.add_follower(OrbitFollowElement(pygame.Vector2(100, 100), random.randint(6, 60)))
+      square.add_follower(SquareFollowElement(pygame.Vector2(100, 100), random.randint(6, 60)))
       return True
 
     elif keys[pygame.K_BACKSPACE]:
-      if orbit.followers:
-        orbit.pop_follower(random.randint(0, len(orbit.followers)-1))
+      if square.followers:
+        square.pop_follower(random.randint(0, len(square.followers)-1))
       return True
 
     elif keys[pygame.K_RSHIFT]:
-      for f in orbit.followers:
+      for f in square.followers:
         f.size = random.randint(6, 60)
       return True
 
     elif keys[pygame.K_EQUALS]:
-      orbit.distance += 1
+      square.distance += 1
       return True
 
     elif keys[pygame.K_6]:
-      orbit.distance -= 1
+      square.distance -= 1
       return True
 
     elif keys[pygame.K_UP]:
-      orbit.speed += 2
+      square.speed += 1
       return True
 
     elif keys[pygame.K_DOWN]:
-      orbit.speed -= 2
+      square.speed -= 1
       return True
 
     elif keys[pygame.K_RIGHT]:
-      orbit.radius += 2
+      square.radius += 1
       return True
     
     elif keys[pygame.K_LEFT]:
-      orbit.radius -= 2
+      square.radius -= 1
       return True
 
     return False
@@ -77,7 +77,7 @@ window = pygame.display.set_mode((500, 500), pygame.RESIZABLE)
 clock = pygame.time.Clock()
 font = pygame.font.SysFont('Consolas', 16)
 
-orbit = OrbitFollowExample(16, 24, 1, OrbitFollowElement(pygame.Vector2(100, 100), 5))
+square = SquareFollowExample(16, 24, SquareFollowElement(pygame.Vector2(100, 100), 5))
 run = True
 while run:
     clock.tick(60)
@@ -85,12 +85,12 @@ while run:
         if event.type == pygame.QUIT:
             run = False
 
-    if orbit.handle_keyboard(pygame.key.get_pressed()):
+    if square.handle_keyboard(pygame.key.get_pressed()):
       pygame.time.delay(100)
 
-    orbit.update_pos(pygame.Vector2(pygame.mouse.get_pos()))
+    square.update_pos(pygame.Vector2(pygame.mouse.get_pos()))
     window.fill(0)
-    orbit.draw()
+    square.draw()
     pygame.display.flip()
 
 pygame.quit()
