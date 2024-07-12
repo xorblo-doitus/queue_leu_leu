@@ -63,39 +63,39 @@ class OrbitFollow:
       self.rings[i].add_angle((self.speed if i % 2 else -self.speed) * SPEED_SCALE)
     
     # Update followers
-    ii = 0
+    i = 0
     
-    radius_tracker = self.radius
-    for i, ring in enumerate(self.rings):
+    total_radius = self.radius
+    for ring in self.rings:
       if not ring.sizes: continue
 
       angle = ring.angle
       step = PI2 / len(ring.sizes)
-      radius = radius_tracker + ring.width / 2
+      radius = total_radius + ring.width / 2
 
-      for i, s in enumerate(ring.sizes):
-        self.followers[ii].pos = self.leader.pos + Vector2(math.cos(angle), math.sin(angle)) * radius
+      for s in ring.sizes:
+        self.followers[i].pos = self.leader.pos + Vector2(math.cos(angle), math.sin(angle)) * radius
         angle += step
-        ii += 1
+        i += 1
       
-      radius_tracker += ring.width + self.distance
+      total_radius += ring.width + self.distance
     
   def adapt_rings(self):
     """Recalculate the rings"""
     ring = 0
-    total = 0
-    radius_tracker = self.radius
-    circumference = PI2 * radius_tracker
+    total_size = 0
+    total_radius = self.radius
+    circumference = PI2 * total_radius
     if ring < len(self.rings): self.rings[ring].clear_sizes()
 
-    for i, f in enumerate(self.followers):
-      total += 2*f.size + self.distance
+    for f in self.followers:
+      total_size += 2*f.size + self.distance
       
-      if total > circumference:
-        radius_tracker += self.distance + self.rings[ring].width # Add processed ring's width
+      if total_size > circumference:
+        total_radius += self.distance + self.rings[ring].width # Add processed ring's width
         ring += 1
-        circumference = PI2 * radius_tracker
-        total = 2*f.size
+        circumference = PI2 * total_radius
+        total_size = 0
         if ring < len(self.rings): self.rings[ring].clear_sizes()
       
       if ring >= len(self.rings): self.rings.append(OrbitFollowRing())
