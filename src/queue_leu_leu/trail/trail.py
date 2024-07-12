@@ -84,10 +84,7 @@ class TrailFollow:
       i += follower.size + self.get_distance()
 
   def check_trail(self):
-    """
-    Check the trail and
-    recalculate it when .distance has changed or if one of the followers changed of size.
-    """
+    """Recalculate the trail if .distance or a follower size has been changed"""
     total = sum(map(lambda f: f.size, self.followers))
     if self.get_distance() != self.__last_distance or total != self.__total_size:
       self.__last_distance = self.get_distance()
@@ -149,7 +146,7 @@ class TrailFollow:
     return (2 * follower.size + self.get_distance()) / self.get_distance()
 
   def get_distance(self) -> int:
-    """Security to never get a distance less than 0"""
+    """Security to never get a distance less than 1"""
     if self.distance < 1: self.distance = 1
     return self.distance
 

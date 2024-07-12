@@ -5,7 +5,7 @@ import pygame, random
 
 
 class ArcFollowExample(ArcFollow):
-  """Inherit the Arc class to draw elements and handle keyboard"""
+  """Inherit the Arc class to draw elements and handle keyboard and mouse"""
 
   def draw(self, debug=True):
     fsize = len(self.followers)

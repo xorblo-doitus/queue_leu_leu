@@ -126,7 +126,7 @@ class OrbitFollow:
       self.__last_speed = self.speed
 
   def add_follower(self, follower: OrbitFollowElement):
-    """Add a new follower in the trail"""
+    """Add a new follower in the rings"""
     self.followers.append(follower)
     self.adapt_rings()
 
@@ -134,7 +134,7 @@ class OrbitFollow:
     self.remove_follower(self.followers[index])
 
   def remove_follower(self, follower: OrbitFollowElement):
-    """Remove a follower of the trail"""
+    """Remove a follower of the rings"""
     if self.followers:
       self.followers.remove(follower)
       self.adapt_rings()

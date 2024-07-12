@@ -120,7 +120,7 @@ class SquareFollow:
       self.__last_speed = self.speed
 
   def add_follower(self, follower: SquareFollowElement):
-    """Add a new follower in the trail"""
+    """Add a new follower in the rings"""
     self.followers.append(follower)
     self.check_rings()
 
@@ -128,7 +128,7 @@ class SquareFollow:
     self.remove_follower(self.followers[index])
 
   def remove_follower(self, follower: SquareFollowElement):
-    """Remove a follower of the trail"""
+    """Remove a follower of the rings"""
     if self.followers:
       self.followers.remove(follower)
       self.adapt_rings()

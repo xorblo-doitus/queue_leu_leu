@@ -60,7 +60,7 @@ clock = pygame.time.Clock()
 font = pygame.font.SysFont('Consolas', 16)
 
 trail = TrailFollowExample(16, TrailFollowElement(pygame.Vector2(100, 100), 5),
-                     precise=True, elastic=False) # options
+                           precise=True, elastic=False) # options
 run = True
 while run:
     clock.tick(60)
