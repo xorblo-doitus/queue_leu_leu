@@ -83,8 +83,34 @@ class OrbitFollow:
         i += 1
       
       total_radius += ring.width + self.distance
-    
+   
   def adapt_rings(self):
+    """Recalculate the rings"""
+    ring = 0
+    total_size = 0
+    total_radius = self.radius
+    circumference = PI2 * total_radius
+    if ring < len(self.rings): self.rings[ring].clear_sizes()
+
+    for f in self.followers:
+      if total_size > circumference:
+        total_radius += self.distance + self.rings[ring].width # Add processed ring's width
+        ring += 1
+        circumference = PI2 * total_radius
+        total_size = 0
+        if ring < len(self.rings): self.rings[ring].clear_sizes()
+      
+      total_size += 2*f.size + self.distance
+      if ring >= len(self.rings): self.rings.append(OrbitFollowRing())
+      self.rings[ring].add_size(f.size)
+      
+    # Remove empty rings
+    ring += 1
+    for _ in range(len(self.rings) - ring):
+      self.rings.pop(ring)
+  
+    
+  def adapt_rings2(self):
     """Recalculate the rings"""
     for ring in self.rings:
       ring.clear_sizes()
@@ -94,7 +120,7 @@ class OrbitFollow:
     
     buffered_followers: list[OrbitFollowElement] = []
     buffered_biggest_size: float = 0
-    followers_to_add: list[OrbitFollowElement] = self.followers.copy()[::-1]
+    followers_to_add: list[OrbitFollowElement] = self.followers[::-1]
   
     while followers_to_add:
       buffered_followers.append(followers_to_add.pop())
