@@ -26,7 +26,7 @@ class OrbitFollowRing:
     self.sizes.append(size)
   
   def clear_sizes(self):
-    self.sizes.clear()
+    if self.sizes: self.sizes.clear()
     self.width = 0
 
 
@@ -90,19 +90,18 @@ class OrbitFollow:
     total_size = 0
     total_radius = self.radius
     circumference = PI2 * total_radius
-    if ring < len(self.rings): self.rings[ring].clear_sizes()
+    self.get_ring(ring).clear_sizes()
 
     for f in self.followers:
       if total_size > circumference:
-        total_radius += self.distance + self.rings[ring].width # Add processed ring's width
+        total_radius += self.distance + self.get_ring(ring).width # Add processed ring's width
         ring += 1
         circumference = PI2 * total_radius
         total_size = 0
-        if ring < len(self.rings): self.rings[ring].clear_sizes()
+        self.get_ring(ring).clear_sizes()
       
       total_size += 2*f.size + self.distance
-      if ring >= len(self.rings): self.rings.append(OrbitFollowRing())
-      self.rings[ring].add_size(f.size)
+      self.get_ring(ring).add_size(f.size)
       
     # Remove empty rings
     ring += 1
@@ -137,7 +136,7 @@ class OrbitFollow:
             buffered_biggest_size = buffered_followers[-1].size
         
         # Create the new ring with every buffered followers
-        ring = self._get_ring(ring_i)
+        ring = self.get_ring(ring_i)
         ring.width = 2*buffered_biggest_size
         ring.radius = total_radius + buffered_biggest_size
         ring.sizes = [f.size for f in buffered_followers]
@@ -167,12 +166,7 @@ class OrbitFollow:
     if self.__last_speed != self.speed:
       self.speed = int(max(min(self.speed, 180 / SPEED_SCALE), -180 / SPEED_SCALE))
       self.__last_speed = self.speed
-  
-  def _get_ring(self, i: int) -> OrbitFollowRing:
-    for _ in range(i-len(self.rings)+1):
-      self.rings.append(OrbitFollowRing())
-    return self.rings[i]
-  
+
   def add_follower(self, follower: OrbitFollowElement):
     """Add a new follower in the rings"""
     self.followers.append(follower)
@@ -186,3 +180,9 @@ class OrbitFollow:
     if self.followers:
       self.followers.remove(follower)
       self.adapt_rings()
+  
+  def get_ring(self, i: int) -> OrbitFollowRing:
+    """Create missing rings if needed and return the requested one"""
+    for _ in range(i-len(self.rings)+1):
+      self.rings.append(OrbitFollowRing())
+    return self.rings[i]
