@@ -6,6 +6,10 @@ SPEED_SCALE = 1 / 8
 PI2 = math.pi * 2
 
 
+def regular_polygon_radius(sides: int, side_len: float) -> float:
+  return side_len / (2 * math.sin(math.pi/sides))
+
+
 class OrbitFollowRing:
   def __init__(self):
     self.angle = 0
@@ -82,32 +86,42 @@ class OrbitFollow:
     
   def adapt_rings(self):
     """Recalculate the rings"""
-    ring = 0
-    total_size = 0
+    for ring in self.rings:
+      ring.clear_sizes()
+    
+    ring_i = 0
     total_radius = self.radius
-    circumference = PI2 * total_radius
-    if ring < len(self.rings): self.rings[ring].clear_sizes()
-
-    for f in self.followers:
-      
-      if total_size > circumference:
-        total_radius += self.distance + self.rings[ring].width # Add processed ring's width
-        ring += 1
-        circumference = PI2 * total_radius
-        total_size = 0
-        if ring < len(self.rings): self.rings[ring].clear_sizes()
-      
-      total_size += 2*f.size + self.distance
-
-      
-      if ring >= len(self.rings): self.rings.append(OrbitFollowRing())
-      self.rings[ring].add_size(f.size)
-      
+    
+    buffered_followers: list[OrbitFollowElement] = []
+    buffered_biggest_size: float = 0
+    followers_to_add: list[OrbitFollowElement] = self.followers.copy()[::-1]
+  
+    while followers_to_add:
+      buffered_followers.append(followers_to_add.pop())
+      buffered_biggest_size = max(buffered_biggest_size, buffered_followers[-1].size)
+      overfits = (
+        len(buffered_followers) > 2
+        and regular_polygon_radius(len(buffered_followers), 2*buffered_biggest_size) > total_radius + buffered_biggest_size
+      )
+      if overfits or not followers_to_add:
+        if overfits:
+          # Unbuffer the last buggered follower
+          followers_to_add.append(buffered_followers.pop())
+          if followers_to_add[-1].size > buffered_followers[-1].size: # Don't use min() it won't work in every case
+            buffered_biggest_size = buffered_followers[-1].size
+        
+        # Create the new ring with every buffered followers
+        ring = self._get_ring(ring_i)
+        ring.width = 2*buffered_biggest_size
+        ring.radius = total_radius + buffered_biggest_size
+        ring.sizes = [f.size for f in buffered_followers]
+        
+        buffered_followers.clear()
+        ring_i += 1
+        total_radius += 2*buffered_biggest_size + self.distance
     
     # Remove empty rings
-    ring += 1
-    for _ in range(len(self.rings) - ring):
-      self.rings.pop(ring)
+    self.rings = self.rings[:ring_i]
   
   def check_rings(self):
     """Recalculate the rings if .radius, .distance or a follower size has been changed"""
@@ -127,7 +141,12 @@ class OrbitFollow:
     if self.__last_speed != self.speed:
       self.speed = int(max(min(self.speed, 180 / SPEED_SCALE), -180 / SPEED_SCALE))
       self.__last_speed = self.speed
-
+  
+  def _get_ring(self, i: int) -> OrbitFollowRing:
+    for _ in range(i-len(self.rings)+1):
+      self.rings.append(OrbitFollowRing())
+    return self.rings[i]
+  
   def add_follower(self, follower: OrbitFollowElement):
     """Add a new follower in the rings"""
     self.followers.append(follower)
