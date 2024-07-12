@@ -27,7 +27,13 @@ class OrbitFollowExample(OrbitFollow):
       pygame.draw.circle(window, (0, 255*i/fsize, 255), f.pos, f.size)
       if debug:
         pygame.draw.circle(window, (255, 0, 0), f.pos, 3)
-        
+        tracked_radius = self.radius
+    
+    if debug:
+      for ring in self.rings:
+        pygame.draw.circle(window, (255, 255, 0), self.leader.pos, tracked_radius + ring.width/2, 1)
+        tracked_radius += ring.width + self.distance
+    
     pygame.draw.circle(window, (255, 0, 0), self.leader.pos, 5)
 
   def handle_keyboard(self, keys):
