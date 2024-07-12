@@ -9,12 +9,21 @@ PI2 = math.pi * 2
 class OrbitFollowRing:
   def __init__(self):
     self.angle = 0
-    self.radius = 0
+    self.width = 0
     self.sizes: list[float] = []
 
   def add_angle(self, degree: int):
     self.angle += math.radians(degree)
     self.angle %= PI2
+  
+  def add_size(self, size: float):
+    if 2*size > self.width:
+      self.width = 2*size
+    self.sizes.append(size)
+  
+  def clear_sizes(self):
+    self.sizes.clear()
+    self.width = 0
 
 
 class OrbitFollowElement:
@@ -56,38 +65,41 @@ class OrbitFollow:
     # Update followers
     ii = 0
     
+    radius_tracker = self.radius
     for i, ring in enumerate(self.rings):
       if not ring.sizes: continue
 
       angle = ring.angle
       step = PI2 / len(ring.sizes)
-      radius = (i + 1) * (self.radius )+ ring.radius
+      radius = radius_tracker + ring.width / 2
 
       for i, s in enumerate(ring.sizes):
         self.followers[ii].pos = self.leader.pos + Vector2(math.cos(angle), math.sin(angle)) * radius
         angle += step
         ii += 1
+      
+      radius_tracker += ring.width + self.distance
     
   def adapt_rings(self):
     """Recalculate the rings"""
     ring = 0
     total = 0
-    circumference = PI2 * ((ring + 1) * self.radius)
-    if ring < len(self.rings): self.rings[ring].sizes.clear()
+    radius_tracker = self.radius
+    circumference = PI2 * radius_tracker
+    if ring < len(self.rings): self.rings[ring].clear_sizes()
 
     for i, f in enumerate(self.followers):
-      size = 2 * f.size + self.distance
-      total += size
+      total += 2*f.size + self.distance
       
       if total > circumference:
+        radius_tracker += self.distance + self.rings[ring].width # Add processed ring's width
         ring += 1
-        circumference = PI2 * ((ring + 1) * self.radius)
-        total = size
-        if ring < len(self.rings): self.rings[ring].sizes.clear()
+        circumference = PI2 * radius_tracker
+        total = 2*f.size
+        if ring < len(self.rings): self.rings[ring].clear_sizes()
       
       if ring >= len(self.rings): self.rings.append(OrbitFollowRing())
-      self.rings[ring].sizes.append(size)
-      #if size > self.rings[ring].radius: self.rings[ring].radius = size
+      self.rings[ring].add_size(f.size)
     
     # Remove empty rings
     ring += 1
