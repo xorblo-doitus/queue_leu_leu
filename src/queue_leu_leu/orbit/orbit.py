@@ -41,13 +41,13 @@ class OrbitFollow:
     """
     self.leader = leader
     self.followers: list[OrbitFollowElement] = []
-    self.__radius = Vector2(radius, 0)
+    self.rings: list[OrbitFollowRing] = []
     self.radius = radius
     self.distance = distance
     self.speed = speed
-    self.rings: list[OrbitFollowRing] = []
-    self.__last_speed = self.speed
+    self.__last_radius = self.radius
     self.__last_distance = self.distance
+    self.__last_speed = self.speed
     self.__total_size = 0
 
   def update_pos(self, new_pos: Vector2):
@@ -109,12 +109,12 @@ class OrbitFollow:
   def check_rings(self):
     """Recalculate the rings if .radius, .distance or a follower size has been changed"""
     total = sum(map(lambda f: f.size, self.followers))
-    if (self.radius != self.__radius.x or 
+    if (self.radius != self.__last_radius or 
         self.distance != self.__last_distance or 
         total != self.__total_size
     ):
       self.radius = max(self.radius, 1)
-      self.__radius.x = self.radius
+      self.__last_radius = self.radius
       self.distance = max(self.distance, 0)
       self.__last_distance = self.distance
       self.__total_size = total
