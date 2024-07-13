@@ -79,7 +79,7 @@ class OrbitFollow:
     """Recalculate the rings"""
     ring = 0
     total_size = 0
-    biggest_size = 2*self.leader.size + self.distance
+    biggest_size = 2*self.leader.size
     total_radius = self.radius + biggest_size
     circumference = PI2 * total_radius
     self.get_ring(ring).sizes.clear()
@@ -87,7 +87,7 @@ class OrbitFollow:
     for f in self.followers:
       if total_size > circumference:
         self.get_ring(ring).radius = total_radius
-        total_radius += biggest_size # Add processed ring's width 
+        total_radius += self.radius + biggest_size # Add processed ring's width 
         ring += 1
         circumference = PI2 * total_radius
         total_size = 0
@@ -97,7 +97,7 @@ class OrbitFollow:
       size = 2*f.size + self.distance
       total_size += size
       self.get_ring(ring).sizes.append(size)
-      if size > biggest_size: biggest_size = size
+      if 2*f.size > biggest_size: biggest_size = 2*f.size
       
     self.get_ring(ring).radius = total_radius
       
