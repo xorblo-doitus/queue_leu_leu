@@ -19,6 +19,7 @@ class OrbitFollowExample(OrbitFollow):
         "Radius    "+str(self.radius),
         "Speed     "+str(self.speed)+" / "+str(SPEED_SCALE_RATIO[1]),
         "Rings     "+", ".join(str(int(math.degrees(i.angle))) for i in self.rings),
+        "Mode      "+self.adapt_mode,
       )
       for i, t in enumerate(things):
         window.blit(font.render(t, False, 0xffffffff), (10, 10+20*i))
