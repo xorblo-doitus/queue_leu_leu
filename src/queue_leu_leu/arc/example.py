@@ -26,7 +26,7 @@ class ArcFollowExample(ArcFollow):
       if debug:
         pygame.draw.circle(window, (255, 0, 0), f.pos, 3)
       
-    pygame.draw.circle(window, (255, 0, 0), self.leader.pos, 5)
+    pygame.draw.circle(window, (255, 0, 0), self.leader.pos, self.leader.size)
 
   def handle_keyboard(self, keys):
     if keys[pygame.K_RETURN]:

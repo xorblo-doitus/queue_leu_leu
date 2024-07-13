@@ -22,7 +22,7 @@ class TrailFollowExample(TrailFollow):
 
     for i, f in enumerate(self.followers):
       pygame.draw.circle(window, (0, 255*i/fsize, 255), f.pos, f.size)
-    pygame.draw.circle(window, (255, 0, 0), self.leader.pos, 5)
+    pygame.draw.circle(window, (255, 0, 0), self.leader.pos, self.leader.size)
 
     if debug:
       for p in self.trail:

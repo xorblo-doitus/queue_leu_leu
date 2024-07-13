@@ -18,8 +18,8 @@ class OrbitFollowExample(OrbitFollow):
         "Distance  "+str(self.distance),
         "Radius    "+str(self.radius),
         "Speed     "+str(self.speed)+" / "+str(SPEED_SCALE_RATIO[1]),
-        "Rings     "+", ".join(str(int(math.degrees(i.angle))) for i in self.rings),
-        "Mode      "+self.adapt_mode,
+        "Angles    "+", ".join(str(int(math.degrees(i.angle))) for i in self.rings),
+        "Rings     "+", ".join(str(i.radius) for i in self.rings),
       )
       for i, t in enumerate(things):
         window.blit(font.render(t, False, 0xffffffff), (10, 10+20*i))
@@ -32,8 +32,8 @@ class OrbitFollowExample(OrbitFollow):
     if debug:
       for ring in self.rings:
         pygame.draw.circle(window, (255, 255, 0), self.leader.pos, ring.radius, 1)
-    
-    pygame.draw.circle(window, (255, 0, 0), self.leader.pos, 5)
+        
+    pygame.draw.circle(window, (255, 0, 0), self.leader.pos, self.leader.size)
 
   def handle_keyboard(self, keys):
     if keys[pygame.K_RETURN]:

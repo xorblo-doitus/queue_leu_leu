@@ -20,15 +20,6 @@ class OrbitFollowRing:
   def add_angle(self, degree: int):
     self.angle += math.radians(degree)
     self.angle %= PI2
-  
-  def add_size(self, size: float):
-    if 2*size > self.width:
-      self.width = 2*size
-    self.sizes.append(size)
-  
-  def clear_sizes(self):
-    if self.sizes: self.sizes.clear()
-    self.width = 0
 
 
 class OrbitFollowElement:
@@ -50,11 +41,14 @@ class OrbitFollow:
     self.radius = radius
     self.distance = distance
     self.speed = speed
-    self.adapt_mode = "approximation" # Temporary as long as both methods exists
     self.__last_radius = self.radius
     self.__last_distance = self.distance
     self.__last_speed = self.speed
     self.__total_size = 0
+    
+    # Temporary as long as both methods exists
+    # but for moment we selecting the precise method
+#    self.adapt_rings = self.adapt_rings_precise
 
   def update_pos(self, new_pos: Vector2):
     """Update the position of the leader"""
@@ -70,7 +64,6 @@ class OrbitFollow:
     
     # Update followers
     i = 0
-    
     for ring in self.rings:
       if not ring.sizes: continue
 
@@ -81,51 +74,42 @@ class OrbitFollow:
         self.followers[i].pos = self.leader.pos + Vector2(math.cos(angle), math.sin(angle)) * ring.radius
         angle += step
         i += 1
-  
+   
   def adapt_rings(self):
-    if self.adapt_mode == "approximation":
-      self.adapt_rings_trough_approximation()
-    else:
-      self.adapt_rings_trough_regular_polygon()
-  
-  def adapt_rings_trough_approximation(self):
     """Recalculate the rings"""
     ring = 0
     total_size = 0
-    biggest_size = 0
-    total_radius = self.radius + self.leader.size + self.distance
+    biggest_size = 2*self.leader.size + self.distance
+    total_radius = self.radius + biggest_size
     circumference = PI2 * total_radius
-    self.get_ring(ring).clear_sizes()
+    self.get_ring(ring).sizes.clear()
 
     for f in self.followers:
-      if f.size > biggest_size:
-        total_radius += f.size - biggest_size
-        biggest_size = f.size
-        # circumference = PI2 * total_radius # FIXME Techniquement, cette ligne est vraie, mais elle empire les chevauchements à cause de l'approximation.
-      
       if total_size > circumference:
         self.get_ring(ring).radius = total_radius
-        total_radius += self.distance + self.get_ring(ring).width # Add processed ring's width
+        total_radius += biggest_size # Add processed ring's width 
         ring += 1
         circumference = PI2 * total_radius
         total_size = 0
         biggest_size = 0
-        self.get_ring(ring).clear_sizes()
-
-      total_size += 2*f.size + self.distance
-      self.get_ring(ring).add_size(f.size)
-    
+        self.get_ring(ring).sizes.clear()
+      
+      size = 2*f.size + self.distance
+      total_size += size
+      self.get_ring(ring).sizes.append(size)
+      if size > biggest_size: biggest_size = size
+      
     self.get_ring(ring).radius = total_radius
-    
+      
     # Remove empty rings
     ring += 1
     for _ in range(len(self.rings) - ring):
       self.rings.pop(ring)
   
-  def adapt_rings_trough_regular_polygon(self):
+  def adapt_rings_precise(self):
     """Recalculate the rings"""
     for ring in self.rings:
-      ring.clear_sizes()
+      ring.sizes.clear()
     
     # Tracking variables
     ring_i = 0
@@ -205,6 +189,7 @@ class OrbitFollow:
   def add_follower(self, follower: OrbitFollowElement):
     """Add a new follower in the rings"""
     self.followers.append(follower)
+    self.__total_size += follower.size
     self.adapt_rings()
 
   def pop_follower(self, index: int=-1):
@@ -214,6 +199,7 @@ class OrbitFollow:
     """Remove a follower of the rings"""
     if self.followers:
       self.followers.remove(follower)
+      self.__total_size -= follower.size
       self.adapt_rings()
   
   def get_ring(self, i: int) -> OrbitFollowRing:
