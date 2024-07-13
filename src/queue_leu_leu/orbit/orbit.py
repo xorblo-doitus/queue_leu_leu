@@ -120,36 +120,58 @@ class OrbitFollow:
     for ring in self.rings:
       ring.clear_sizes()
     
+    # Tracking variables
     ring_i = 0
     total_radius = self.radius
-    
-    buffered_followers: list[OrbitFollowElement] = []
-    buffered_biggest_size: float = 0
     followers_to_add: list[OrbitFollowElement] = self.followers[::-1]
+    
+    # Ring specific variables
+    buffered_followers: list[OrbitFollowElement] = []
+    longest_side: float = 0
+    biggest_size: float = 0
+    second_biggest_size: float = 0
   
     while followers_to_add:
       buffered_followers.append(followers_to_add.pop())
-      buffered_biggest_size = max(buffered_biggest_size, buffered_followers[-1].size)
+      
+      current_size = buffered_followers[-1].size
+      
+      if current_size > biggest_size:
+        second_biggest_size = biggest_size
+        biggest_size = current_size
+      
+      if len(buffered_followers) > 1:
+        longest_side = max(longest_side, current_size + buffered_followers[-2].size + self.distance)
+      
       overfits = (
         len(buffered_followers) > 2
-        and regular_polygon_radius(len(buffered_followers), 2*buffered_biggest_size) > total_radius + buffered_biggest_size
+        and regular_polygon_radius(len(buffered_followers), longest_side) > total_radius + biggest_size
       )
+      
       if overfits or not followers_to_add:
         if overfits:
-          # Unbuffer the last buggered follower
+          # Unbuffer the last buffered follower
           followers_to_add.append(buffered_followers.pop())
-          if followers_to_add[-1].size > buffered_followers[-1].size: # Don't use min() it won't work in every case
-            buffered_biggest_size = buffered_followers[-1].size
+          if followers_to_add[-1].size > current_size: # Don't use min() it won't work in every case
+            biggest_size = second_biggest_size
+          # Don't need to update longest_side.
         
         # Create the new ring with every buffered followers
         ring = self.get_ring(ring_i)
-        ring.width = 2*buffered_biggest_size
-        ring.radius = total_radius + buffered_biggest_size
+        ring.width = 2*biggest_size
+        ring.radius = total_radius + biggest_size
         ring.sizes = [f.size for f in buffered_followers]
         
-        buffered_followers.clear()
+        # Progress
+        total_radius += 2*biggest_size + self.distance
         ring_i += 1
-        total_radius += 2*buffered_biggest_size + self.distance
+        
+        # Clean up variables
+        buffered_followers.clear()
+        biggest_size = 0
+        second_biggest_size = 0
+        longest_side = 0
+        
     
     # Remove empty rings
     self.rings = self.rings[:ring_i]
