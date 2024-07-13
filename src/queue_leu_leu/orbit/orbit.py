@@ -13,8 +13,7 @@ def regular_polygon_radius(sides: int, side_len: float) -> float:
 class OrbitFollowRing:
   def __init__(self):
     self.angle = 0
-    self.radius: float = 1
-    self.width: float = 0
+    self.radius = 1
     self.sizes: list[float] = []
 
   def add_angle(self, degree: int):
@@ -48,7 +47,7 @@ class OrbitFollow:
     
     # Temporary as long as both methods exists
     # but for moment we selecting the precise method
-#    self.adapt_rings = self.adapt_rings_precise
+    self.adapt_rings = self.adapt_rings_precise
 
   def update_pos(self, new_pos: Vector2):
     """Update the position of the leader"""
@@ -77,22 +76,23 @@ class OrbitFollow:
    
   def adapt_rings(self):
     """Recalculate the rings"""
+    # Clear rings
+    for ring in self.rings: ring.sizes.clear()
+    
     ring = 0
     total_size = 0
-    biggest_size = 2*self.leader.size
+    biggest_size = self.leader.size
     total_radius = self.radius + biggest_size
     circumference = PI2 * total_radius
-    self.get_ring(ring).sizes.clear()
 
     for f in self.followers:
       if total_size > circumference:
         self.get_ring(ring).radius = total_radius
         total_radius += self.radius + biggest_size # Add processed ring's width 
-        ring += 1
         circumference = PI2 * total_radius
+        ring += 1
         total_size = 0
         biggest_size = 0
-        self.get_ring(ring).sizes.clear()
       
       size = 2*f.size + self.distance
       total_size += size
@@ -102,25 +102,22 @@ class OrbitFollow:
     self.get_ring(ring).radius = total_radius
       
     # Remove empty rings
-    ring += 1
-    for _ in range(len(self.rings) - ring):
-      self.rings.pop(ring)
-  
+    self.rings = self.rings[:ring+1]
+
   def adapt_rings_precise(self):
     """Recalculate the rings"""
     for ring in self.rings:
       ring.sizes.clear()
     
     # Tracking variables
-    ring_i = 0
-    total_radius = self.radius + self.leader.size + self.distance
+    ring = 0
+    total_radius = self.radius + self.leader.size
     followers_to_add: list[OrbitFollowElement] = self.followers[::-1]
     
     # Ring specific variables
     buffered_followers: list[OrbitFollowElement] = []
-    longest_side: float = 0
-    biggest_size: float = 0
-    second_biggest_size: float = 0
+    longest_side = 0
+    biggest_size = 0
   
     while followers_to_add:
       buffered_followers.append(followers_to_add.pop())
@@ -128,7 +125,6 @@ class OrbitFollow:
       current_size = buffered_followers[-1].size
       
       if current_size > biggest_size:
-        second_biggest_size = biggest_size
         biggest_size = current_size
       
       if len(buffered_followers) > 1:
@@ -140,32 +136,22 @@ class OrbitFollow:
       )
       
       if overfits or not followers_to_add:
-        if overfits:
-          # Unbuffer the last buffered follower
-          followers_to_add.append(buffered_followers.pop())
-          if followers_to_add[-1].size > current_size: # Don't use min() it won't work in every case
-            biggest_size = second_biggest_size
-          # Don't need to update longest_side.
-        
         # Create the new ring with every buffered followers
-        ring = self.get_ring(ring_i)
-        ring.width = 2*biggest_size
-        ring.radius = total_radius + biggest_size
-        ring.sizes = [f.size for f in buffered_followers]
+        self.get_ring(ring).radius = total_radius + biggest_size
+        self.get_ring(ring).sizes = [2*f.size + self.distance for f in buffered_followers]
         
         # Progress
-        total_radius += 2*biggest_size + self.distance
-        ring_i += 1
+        total_radius += self.radius + 2*biggest_size
+        ring += 1
         
         # Clean up variables
         buffered_followers.clear()
         biggest_size = 0
-        second_biggest_size = 0
         longest_side = 0
         
     
     # Remove empty rings
-    self.rings = self.rings[:ring_i]
+    self.rings = self.rings[:ring]
   
   def check_rings(self):
     """Recalculate the rings if .radius, .distance or a follower size has been changed"""
