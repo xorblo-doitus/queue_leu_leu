@@ -13,7 +13,8 @@ def regular_polygon_radius(sides: int, side_len: float) -> float:
 class OrbitFollowRing:
   def __init__(self):
     self.angle = 0
-    self.width = 0
+    self.radius: float = 1
+    self.width: float = 0
     self.sizes: list[float] = []
 
   def add_angle(self, degree: int):
@@ -70,20 +71,16 @@ class OrbitFollow:
     # Update followers
     i = 0
     
-    total_radius = self.radius
     for ring in self.rings:
       if not ring.sizes: continue
 
       angle = ring.angle
       step = PI2 / len(ring.sizes)
-      radius = total_radius + ring.width / 2
 
       for s in ring.sizes:
-        self.followers[i].pos = self.leader.pos + Vector2(math.cos(angle), math.sin(angle)) * radius
+        self.followers[i].pos = self.leader.pos + Vector2(math.cos(angle), math.sin(angle)) * ring.radius
         angle += step
         i += 1
-      
-      total_radius += ring.width + self.distance
   
   def adapt_rings(self):
     if self.adapt_mode == "approximation":
@@ -95,21 +92,31 @@ class OrbitFollow:
     """Recalculate the rings"""
     ring = 0
     total_size = 0
+    biggest_size = 0
     total_radius = self.radius
     circumference = PI2 * total_radius
     self.get_ring(ring).clear_sizes()
 
     for f in self.followers:
+      if f.size > biggest_size:
+        total_radius += f.size - biggest_size
+        biggest_size = f.size
+        # circumference = PI2 * total_radius # FIXME Techniquement, cette ligne est vraie, mais elle empire les chevauchements à cause de l'approximation.
+      
       if total_size > circumference:
+        self.get_ring(ring).radius = total_radius
         total_radius += self.distance + self.get_ring(ring).width # Add processed ring's width
         ring += 1
         circumference = PI2 * total_radius
         total_size = 0
+        biggest_size = 0
         self.get_ring(ring).clear_sizes()
-      
+
       total_size += 2*f.size + self.distance
       self.get_ring(ring).add_size(f.size)
-      
+    
+    self.get_ring(ring).radius = total_radius
+    
     # Remove empty rings
     ring += 1
     for _ in range(len(self.rings) - ring):

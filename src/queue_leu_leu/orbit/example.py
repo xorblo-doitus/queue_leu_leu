@@ -30,10 +30,8 @@ class OrbitFollowExample(OrbitFollow):
         pygame.draw.circle(window, (255, 0, 0), f.pos, 3)
     
     if debug:
-      total_radius = self.radius
       for ring in self.rings:
-        pygame.draw.circle(window, (255, 255, 0), self.leader.pos, total_radius + ring.width/2, 1)
-        total_radius += ring.width + self.distance
+        pygame.draw.circle(window, (255, 255, 0), self.leader.pos, ring.radius, 1)
     
     pygame.draw.circle(window, (255, 0, 0), self.leader.pos, 5)
 
