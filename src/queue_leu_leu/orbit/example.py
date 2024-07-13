@@ -74,6 +74,11 @@ class OrbitFollowExample(OrbitFollow):
     elif keys[pygame.K_LEFT]:
       orbit.radius -= 2
       return True
+    
+    elif keys[pygame.K_m]:
+      orbit.adapt_mode = "regular_polygon" if orbit.adapt_mode == "approximation" else "approximation"
+      orbit.adapt_rings()
+      return True
 
     return False
 

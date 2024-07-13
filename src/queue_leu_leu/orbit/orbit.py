@@ -49,6 +49,7 @@ class OrbitFollow:
     self.radius = radius
     self.distance = distance
     self.speed = speed
+    self.adapt_mode = "approximation" # Temporary as long as both methods exists
     self.__last_radius = self.radius
     self.__last_distance = self.distance
     self.__last_speed = self.speed
@@ -83,8 +84,14 @@ class OrbitFollow:
         i += 1
       
       total_radius += ring.width + self.distance
-   
+  
   def adapt_rings(self):
+    if self.adapt_mode == "approximation":
+      self.adapt_rings_trough_approximation()
+    else:
+      self.adapt_rings_trough_regular_polygon()
+  
+  def adapt_rings_trough_approximation(self):
     """Recalculate the rings"""
     ring = 0
     total_size = 0
@@ -108,8 +115,7 @@ class OrbitFollow:
     for _ in range(len(self.rings) - ring):
       self.rings.pop(ring)
   
-    
-  def adapt_rings2(self):
+  def adapt_rings_trough_regular_polygon(self):
     """Recalculate the rings"""
     for ring in self.rings:
       ring.clear_sizes()
