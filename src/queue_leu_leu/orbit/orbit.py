@@ -93,7 +93,7 @@ class OrbitFollow:
     ring = 0
     total_size = 0
     biggest_size = 0
-    total_radius = self.radius
+    total_radius = self.radius + self.leader.size + self.distance
     circumference = PI2 * total_radius
     self.get_ring(ring).clear_sizes()
 
@@ -129,7 +129,7 @@ class OrbitFollow:
     
     # Tracking variables
     ring_i = 0
-    total_radius = self.radius
+    total_radius = self.radius + self.leader.size + self.distance
     followers_to_add: list[OrbitFollowElement] = self.followers[::-1]
     
     # Ring specific variables
