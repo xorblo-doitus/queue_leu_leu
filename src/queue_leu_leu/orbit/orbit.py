@@ -139,15 +139,17 @@ class OrbitFollow:
         if overfits:
           # Remove the follower who is overflowing
           to_add.append(in_ring.pop())
-          if to_add[-1].size > current_size: # Don't use min() it won't work in every case
-            biggest_size = second_biggest_size
+          
+          if to_add[-1] > in_ring[-1]: # Don't use min() it won't work in every case
+            biggest_size = last_biggest_size
             current_angle = 0
             for i in range(len(in_ring) - 2):
-              current_angle += advance_on_circle(total_radius + biggest_size, in_ring[i].size + self.follower_spacing + in_ring[i+1].size)
+              current_angle += advance_on_circle(total_radius + biggest_size, in_ring[i] + self.spacing + in_ring[i+1])
+          
           elif len(in_ring) >= 1:
-            current_angle -= advance_on_circle(total_radius + biggest_size, in_ring[-1].size + self.follower_spacing + to_add[-1].size)
+            current_angle -= advance_on_circle(total_radius + biggest_size, in_ring[-1] + self.spacing + to_add[-1])
         
-        current_angle += advance_on_circle(total_radius + biggest_size, in_ring[-1].size + self.follower_spacing + in_ring[0].size)
+        current_angle += advance_on_circle(total_radius + biggest_size, in_ring[-1] + self.spacing + in_ring[0])
         
         # Create the new ring with every selected followers
         ring = self.get_ring(ring_i)
