@@ -219,7 +219,7 @@ class OrbitFollow:
         longest_side = 0
     
     # Remove empty rings
-    self.rings = [ring for ring in self.rings if ring.sizes]
+    self.rings = self.rings[:ring_i]
 
   def check_rings(self):
     """Recalculate the rings if .radius, .distance or a follower size has been changed"""
