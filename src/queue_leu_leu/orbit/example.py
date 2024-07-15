@@ -14,12 +14,13 @@ class OrbitFollowExample(OrbitFollow):
 
     if debug:
       things = (
-        "Followers "+str(fsize),
-        "Distance  "+str(self.distance),
-        "Radius    "+str(self.radius),
-        "Speed     "+str(self.speed)+" / "+str(SPEED_SCALE_RATIO[1]),
-        "Angles    "+", ".join(str(int(math.degrees(i.angle))).rjust(3) for i in self.rings),
-        "Rings     "+", ".join(str(i.radius).rjust(3) for i in self.rings),
+        "Followers         "+str(fsize),
+        "Follower spacing  "+str(self.follower_spacing),
+        "Fing spacing      "+str(self.ring_spacing),
+        "Mode              "+str(OrbitFollow.mode_names[self.mode]),
+        "Speed             "+str(self.speed)+" / "+str(SPEED_SCALE_RATIO[1]),
+        "Angles            "+", ".join(str(int(math.degrees(i.angle))).rjust(3) for i in self.rings),
+        "Rings             "+", ".join(str(i.radius).rjust(3) for i in self.rings),
       )
       for i, t in enumerate(things):
         window.blit(font.render(t, False, 0xffffffff), (10, 10+20*i))
@@ -51,11 +52,11 @@ class OrbitFollowExample(OrbitFollow):
       return True
 
     elif keys[pygame.K_EQUALS]:
-      orbit.distance += 1
+      orbit.follower_spacing += 1
       return True
 
     elif keys[pygame.K_6]:
-      orbit.distance -= 1
+      orbit.follower_spacing -= 1
       return True
 
     elif keys[pygame.K_UP]:
@@ -67,15 +68,15 @@ class OrbitFollowExample(OrbitFollow):
       return True
 
     elif keys[pygame.K_RIGHT]:
-      orbit.radius += 2
+      orbit.ring_spacing += 2
       return True
     
     elif keys[pygame.K_LEFT]:
-      orbit.radius -= 2
+      orbit.ring_spacing -= 2
       return True
     
     elif keys[pygame.K_m]:
-      orbit.adapt_mode = "regular_polygon" if orbit.adapt_mode == "approximation" else "approximation"
+      orbit.mode = OrbitFollow.MODE_EVEN_PLACEMENT if orbit.mode == OrbitFollow.MODE_EVEN_SPACING else OrbitFollow.MODE_EVEN_SPACING
       orbit.adapt_rings()
       return True
 
