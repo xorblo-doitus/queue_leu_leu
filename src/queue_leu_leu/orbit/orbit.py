@@ -135,9 +135,13 @@ class OrbitFollow:
           to_add.append(in_ring.pop())
           if to_add[-1].size > current_size: # Don't use min() it won't work in every case
             biggest_size = second_biggest_size
-            # Don't need to update longest_side.
-        else:
-          current_angle += advance_on_circle(total_radius + biggest_size, in_ring[-1].size + self.follower_spacing + in_ring[0].size)
+            current_angle = 0
+            for i in range(len(in_ring) - 2):
+              current_angle += advance_on_circle(total_radius + biggest_size, in_ring[i].size + self.follower_spacing + in_ring[i+1].size)
+          elif len(in_ring) >= 1:
+            current_angle -= advance_on_circle(total_radius + biggest_size, in_ring[-1].size + self.follower_spacing + to_add[-1].size)
+        
+        current_angle += advance_on_circle(total_radius + biggest_size, in_ring[-1].size + self.follower_spacing + in_ring[0].size)
         
         # Create the new ring with every selected followers
         ring = self.get_ring(ring_i)
