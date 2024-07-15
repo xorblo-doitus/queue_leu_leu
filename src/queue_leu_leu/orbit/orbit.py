@@ -6,8 +6,11 @@ SPEED_SCALE = 1 / 8
 PI2 = math.pi * 2
 
 
-def regular_polygon_radius(sides: int, side_len: float) -> float:
-  return side_len / (2 * math.sin(math.pi/sides))
+def advance_on_circle(radius: float, progress: float):
+  return 2 * math.asin(progress/(-2*radius))
+
+def regular_polygon_radius(sides: int, size: float) -> float:
+  return size / (2 * math.sin(math.pi/sides))
 
 
 class OrbitFollowRing:
@@ -44,10 +47,6 @@ class OrbitFollow:
     self.__last_distance = self.distance
     self.__last_speed = self.speed
     self.__total_size = 0
-    
-    # Temporary as long as both methods exists
-    # but for moment we selecting the precise method
-#    self.adapt_rings = self.adapt_rings_precise
 
   def update_pos(self, new_pos: Vector2):
     """Update the position of the leader"""
@@ -79,120 +78,26 @@ class OrbitFollow:
     # Clear rings
     for ring in self.rings: ring.sizes.clear()
 
-    ring = 0
-    longest_side = 0
+    ring = longest_side = ii = 0
     biggest_size = self.leader.size
     total_radius = self.radius + biggest_size
-    max_i = len(self.followers) - 1
     
     for i, f in enumerate(self.followers):
       self.get_ring(ring).sizes.append(2*f.size + self.distance)
-      flen = len(self.get_ring(ring).sizes)
+      ii += 1
+      biggest_size = max(biggest_size, f.size)
       
-      if f.size > biggest_size: biggest_size = f.size
-      
-      if flen > 1:
-        longest_side = max(longest_side, f.size + self.followers[i-1].size + self.distance)
-      
-      if ((flen > 2 and regular_polygon_radius(flen, longest_side) > total_radius + biggest_size) 
-         or i >= max_i
-      ):
+      if ii > 1: longest_side = max(longest_side, f.size + self.followers[i-1].size + self.distance)
+      if ii > 2 and regular_polygon_radius(ii, longest_side) > total_radius + biggest_size:
         self.get_ring(ring).radius = total_radius + biggest_size
-        # Progress
         total_radius += self.radius + 2*biggest_size
         ring += 1
-        # Clean up variables
-        biggest_size = 0
-        longest_side = 0
+        biggest_size = longest_side = ii = 0
         
-    self.rings = self.rings[:ring]
-    
-#    ring = 0
-#    total_size = 0
-#    biggest_size = self.leader.size
-#    total_radius = self.radius + biggest_size
-#    circumference = PI2 * total_radius
-#
-#    for f in self.followers:
-#      if total_size > circumference:
-#        self.get_ring(ring).radius = total_radius
-#        total_radius += self.radius + biggest_size # Add processed ring's width 
-#        circumference = PI2 * total_radius
-#        ring += 1
-#        total_size = 0
-#        biggest_size = 0
-#      
-#      size = 2*f.size + self.distance
-#      total_size += size
-#      self.get_ring(ring).sizes.append(size)
-#      if 2*f.size > biggest_size: biggest_size = 2*f.size
-#      
-#    self.get_ring(ring).radius = total_radius
-#      
-#    # Remove empty rings
-#    self.rings = self.rings[:ring+1]
-
-  def adapt_rings_precise(self):
-    """Recalculate the rings"""
-    for ring in self.rings:
-      ring.sizes.clear()
-    
-    # Tracking variables
-    ring_i = 0
-    total_radius = self.radius + self.leader.size + self.distance
-    to_add = self.followers[::-1]
-    
-    # Ring specific variables
-    remeaning = []
-    longest_side = 0
-    biggest_size = 0
-    second_biggest_size = 0
-  
-    while to_add:
-      remeaning.append(to_add.pop())
-      
-      size = remeaning[-1].size
-      
-      if size > biggest_size:
-        second_biggest_size = biggest_size
-        biggest_size = size
-      
-      if len(remeaning) > 1:
-        longest_side = max(longest_side, size + remeaning[-2].size + self.distance)
-      
-      overfits = (
-        len(remeaning) > 2
-        and regular_polygon_radius(len(remeaning), longest_side) > total_radius + biggest_size
-      )
-      
-      if overfits or not to_add:
-# I think, this is not nedded
-#        if overfits:
-#          # Unbuffer the last buffered follower
-#          to_add.append(remeaning.pop())
-#          if to_add[-1].size > size: # Don't use min() it won't work in every case
-#            biggest_size = second_biggest_size
-#          # Don't need to update longest_side.
-        
-        # Create the new ring with every buffered followers
-        ring = self.get_ring(ring_i)
-        ring.radius = total_radius + biggest_size
-        ring.sizes = [f.size for f in remeaning]
-        
-        # Progress
-        total_radius += 2*biggest_size + self.distance
-        ring_i += 1
-        
-        # Clean up variables
-        remeaning.clear()
-        biggest_size = 0
-        second_biggest_size = 0
-        longest_side = 0
-        
-    
+    self.get_ring(ring).radius = total_radius + biggest_size
     # Remove empty rings
-    self.rings = self.rings[:ring_i]
-  
+    self.rings = [ring for ring in self.rings if ring.sizes]
+
   def check_rings(self):
     """Recalculate the rings if .radius, .distance or a follower size has been changed"""
     total = sum(map(lambda f: f.size, self.followers))
