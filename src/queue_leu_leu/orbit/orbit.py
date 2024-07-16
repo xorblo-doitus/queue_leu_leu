@@ -236,16 +236,20 @@ class OrbitFollow:
   def add_follower(self, follower: OrbitFollowElement):
     """Add a new follower in the rings"""
     self.followers.append(follower)
+    
+    # Adapt rings
+    self.__total_size += follower.size
     self.adapt_rings()
 
   def pop_follower(self, index: int=-1):
-    self.remove_follower(self.followers[index])
+    removed = self.followers.pop(index)
+    # Adapt rings
+    self.__total_size -= removed.size
+    self.adapt_rings()
 
   def remove_follower(self, follower: OrbitFollowElement):
     """Remove a follower of the rings"""
-    if self.followers:
-      self.followers.remove(follower)
-      self.adapt_rings()
+    self.pop_follower(self.followers.index(follower))
   
   def get_ring(self, i: int) -> OrbitFollowRing:
     """Create missing rings if needed and return the requested one"""
