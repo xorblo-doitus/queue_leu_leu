@@ -82,6 +82,8 @@ class OrbitFollow:
         follower_i += 1
   
   def adapt_rings_even_spacing(self):
+    """Place followers with even spacing between them."""
+    
     # Tracking variables
     ring_i: int = 0
     total_radius: float = self.ring_spacing + self.leader.size
@@ -152,6 +154,8 @@ class OrbitFollow:
     self.rings = self.rings[:ring_i]
   
   def adapt_rings_even_placement(self):
+    """Place followers with even spacing between their centers."""
+    
     # Tracking variables
     ring_i: int = 0
     total_radius: float = self.ring_spacing + self.leader.size
