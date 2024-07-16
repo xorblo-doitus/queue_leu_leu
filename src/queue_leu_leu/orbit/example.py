@@ -8,18 +8,23 @@ SPEED_SCALE_RATIO = SPEED_SCALE.as_integer_ratio()
 
 class OrbitFollowExample(OrbitFollow):
   """Inherit the OrbitFollow class to draw elements and handle keyboard"""
+  mode_names = {
+    OrbitFollow.MODE_EVEN_SPACING: "Even spacing",
+    OrbitFollow.MODE_EVEN_PLACEMENT: "Even placement"
+  }
 
   def draw(self, debug=True):
     fsize = len(self.followers)
 
     if debug:
       things = (
-        "Followers "+str(fsize),
-        "Spacing   "+str(self.spacing),
-        "Radius    "+str(self.radius),
-        "Speed     "+str(self.speed)+" / "+str(SPEED_SCALE_RATIO[1]),
-        "Angles    "+", ".join(str(int(math.degrees(i.angle))).rjust(3) for i in self.rings),
-        "Rings     "+", ".join(str(i.radius).rjust(3) for i in self.rings),
+        "       Followers "+str(fsize),
+        "Follower spacing "+str(self.follower_spacing),
+        "    Ring spacing "+str(self.ring_spacing),
+        "            Mode "+str(OrbitFollowExample.mode_names[self.mode]),
+        "           Speed "+str(self.speed)+" / "+str(SPEED_SCALE_RATIO[1]),
+        "          Angles "+", ".join(str(int(math.degrees(i.angle))).rjust(3) for i in self.rings),
+        "           Rings "+", ".join(str(i.radius).rjust(3) for i in self.rings),
       )
       for i, t in enumerate(things):
         window.blit(font.render(t, False, 0xffffffff), (10, 10+20*i))
@@ -51,11 +56,11 @@ class OrbitFollowExample(OrbitFollow):
       return True
 
     elif keys[pygame.K_EQUALS]:
-      orbit.spacing += 1
+      orbit.follower_spacing += 1
       return True
 
     elif keys[pygame.K_6]:
-      orbit.spacing -= 1
+      orbit.follower_spacing -= 1
       return True
 
     elif keys[pygame.K_UP]:
@@ -67,11 +72,16 @@ class OrbitFollowExample(OrbitFollow):
       return True
 
     elif keys[pygame.K_RIGHT]:
-      orbit.radius += 2
+      orbit.ring_spacing += 2
       return True
     
     elif keys[pygame.K_LEFT]:
-      orbit.radius -= 2
+      orbit.ring_spacing -= 2
+      return True
+    
+    elif keys[pygame.K_m]:
+      orbit.mode = OrbitFollow.MODE_EVEN_PLACEMENT if orbit.mode == OrbitFollow.MODE_EVEN_SPACING else OrbitFollow.MODE_EVEN_SPACING
+      orbit.adapt_rings()
       return True
 
     return False
@@ -82,8 +92,7 @@ window = pygame.display.set_mode((500, 500), pygame.RESIZABLE)
 clock = pygame.time.Clock()
 font = pygame.font.SysFont('Consolas', 16)
 
-orbit = OrbitFollowExample(16, 24, 1, OrbitFollowElement(pygame.Vector2(100, 100), 5),
-                           precise=True) # options
+orbit = OrbitFollowExample(16, 24, 1, OrbitFollowElement(pygame.Vector2(100, 100), 5))
 run = True
 while run:
     clock.tick(60)
