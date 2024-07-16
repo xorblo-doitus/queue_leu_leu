@@ -38,16 +38,13 @@ class OrbitFollowElement:
 
 
 class OrbitFollow:
-  MODE_EVEN_SPACING = 1
-  MODE_EVEN_PLACEMENT = 2
-  
-  def __init__(self, follower_spacing: float, ring_spacing: float, speed: float, leader: OrbitFollowElement, mode: int = MODE_EVEN_SPACING):
+  def __init__(self, follower_spacing: float, ring_spacing: float, speed: float, leader: OrbitFollowElement, ring_builder: callable = None):
     """
     :param follower_spacing: distance between followers
     :param ring_spacing: minimum distance between rings
     :param speed: angle (in deg) to add each updates
     :param leader: the leader
-    :param mode: Set to :py:attr:`MODE_EVEN_SPACING` and :py:attr:`MODE_EVEN_PLACEMENT`. Even spacing places followers with a uniform spacing between their borders. Even placement places followers with a uniform distance between their centers.
+    :param ring_builder: Set to :py:meth:`adapt_rings_even_spacing` and :py:meth:`adapt_rings_even_placement`.
     """
     self.leader = leader
     self.followers: list[OrbitFollowElement] = []
@@ -55,7 +52,8 @@ class OrbitFollow:
     self.ring_spacing = ring_spacing
     self.follower_spacing = follower_spacing
     self.speed = speed
-    self.mode = mode
+    if ring_builder:
+      self.adapt_rings: callable = ring_builder
     self.__last_ring_spacing = self.ring_spacing
     self.__last_follower_spacing = self.follower_spacing
     self.__last_speed = self.speed
@@ -82,12 +80,6 @@ class OrbitFollow:
       for angle in ring.angles:
         self.followers[follower_i].pos = self.leader.pos + Vector2_from_polar(ring.radius, angle_shift + angle)
         follower_i += 1
-  
-  def adapt_rings(self):
-    if self.mode == OrbitFollow.MODE_EVEN_PLACEMENT:
-      self.adapt_rings_even_placement()
-    else:
-      self.adapt_rings_even_spacing()
   
   def adapt_rings_even_spacing(self):
     # Tracking variables
@@ -191,6 +183,7 @@ class OrbitFollow:
         if overfits:
           # Remove the follower who is overflowing
           to_add.append(in_ring.pop())
+          
           if to_add[-1] > current_size: # Don't use min() it won't work in every case
             biggest = previous_biggest
             # Don't need to update longest_side.
@@ -213,6 +206,8 @@ class OrbitFollow:
     
     # Remove empty rings
     self.rings = self.rings[:ring_i]
+
+  adapt_rings = adapt_rings_even_spacing
 
   def check_rings(self):
     """Recalculate the rings if .radius, .distance or a follower size has been changed"""

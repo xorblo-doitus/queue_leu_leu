@@ -8,9 +8,9 @@ SPEED_SCALE_RATIO = SPEED_SCALE.as_integer_ratio()
 
 class OrbitFollowExample(OrbitFollow):
   """Inherit the OrbitFollow class to draw elements and handle keyboard"""
-  mode_names = {
-    OrbitFollow.MODE_EVEN_SPACING: "Even spacing",
-    OrbitFollow.MODE_EVEN_PLACEMENT: "Even placement"
+  ring_builder_names = {
+    OrbitFollow.adapt_rings_even_spacing: "Even spacing",
+    OrbitFollow.adapt_rings_even_placement: "Even placement"
   }
 
   def draw(self, debug=True):
@@ -21,7 +21,7 @@ class OrbitFollowExample(OrbitFollow):
         "       Followers "+str(fsize),
         "Follower spacing "+str(self.follower_spacing),
         "    Ring spacing "+str(self.ring_spacing),
-        "            Mode "+str(OrbitFollowExample.mode_names[self.mode]),
+        "            Mode "+str(OrbitFollowExample.ring_builder_names[self.adapt_rings.__func__]),
         "           Speed "+str(self.speed)+" / "+str(SPEED_SCALE_RATIO[1]),
         "          Angles "+", ".join(str(int(math.degrees(i.angle))).rjust(3) for i in self.rings),
         "           Rings "+", ".join(str(i.radius).rjust(3) for i in self.rings),
@@ -80,7 +80,7 @@ class OrbitFollowExample(OrbitFollow):
       return True
     
     elif keys[pygame.K_m]:
-      orbit.mode = OrbitFollow.MODE_EVEN_PLACEMENT if orbit.mode == OrbitFollow.MODE_EVEN_SPACING else OrbitFollow.MODE_EVEN_SPACING
+      orbit.adapt_rings = orbit.adapt_rings_even_placement if orbit.adapt_rings == orbit.adapt_rings_even_spacing else orbit.adapt_rings_even_spacing
       orbit.adapt_rings()
       return True
 
