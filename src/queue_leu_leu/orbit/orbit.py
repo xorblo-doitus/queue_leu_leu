@@ -99,10 +99,10 @@ class OrbitFollow:
       if len(in_ring) >= 2:
         angle += advance_on_circle(total_radius + biggest, in_ring[-2] + self.spacing + size)
       
-      if ((len(in_ring) > 2 and 
-           angle + advance_on_circle(total_radius + biggest, size + self.spacing + in_ring[0]) > PI2)
-          or i >= max_i):
-        angle += advance_on_circle(total_radius + biggest, in_ring[-1] + self.spacing + in_ring[0])
+      total_angle = angle + advance_on_circle(total_radius + biggest, size + self.spacing + in_ring[0])
+      
+      if (len(in_ring) > 2 and total_angle > PI2) or i >= max_i:
+        angle = total_angle
         
         r = self.get_ring(ring)
         r.radius = total_radius + biggest
