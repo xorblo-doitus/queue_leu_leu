@@ -16,7 +16,7 @@ class OrbitFollowExample(OrbitFollow):
       things = (
         "Followers "+str(fsize),
         "Spacing   "+str(self.spacing),
-        "Radius    "+str(self.radius),
+        "Radius    "+str(self.radius_gap),
         "Speed     "+str(self.speed)+" / "+str(SPEED_SCALE_RATIO[1]),
         "Angles    "+", ".join(str(int(math.degrees(i.angle))).rjust(3) for i in self.rings),
         "Rings     "+", ".join(str(i.radius).rjust(3) for i in self.rings),
@@ -67,11 +67,11 @@ class OrbitFollowExample(OrbitFollow):
       return True
 
     elif keys[pygame.K_RIGHT]:
-      orbit.radius += 2
+      orbit.radius_gap += 2
       return True
     
     elif keys[pygame.K_LEFT]:
-      orbit.radius -= 2
+      orbit.radius_gap -= 2
       return True
 
     return False
@@ -83,7 +83,7 @@ clock = pygame.time.Clock()
 font = pygame.font.SysFont('Consolas', 16)
 
 orbit = OrbitFollowExample(16, 24, 1, OrbitFollowElement(pygame.Vector2(100, 100), 5),
-                           precise=True) # options
+                           precise=False) # options
 run = True
 while run:
     clock.tick(60)
