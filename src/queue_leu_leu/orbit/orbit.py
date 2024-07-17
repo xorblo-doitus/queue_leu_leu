@@ -6,20 +6,24 @@ SPEED_SCALE = 1 / 8
 PI2 = math.pi * 2
 
 
-def advance_on_circle(radius: float, progress: float, default: float=PI2) -> float:
-  alpha = progress/(2*radius)
+def advance_on_circle(radius: float, distance: float, fallback: float=PI2) -> float:
+  alpha = distance/(2*radius)
   # This can rarely happen if follower spacing is higher than ring spacing
-  if not -1<=alpha<=1: return default
+  if not -1<=alpha<=1: return fallback
   return 2 * math.asin(alpha)
 
-def regular_polygon_radius(sides: int, size: float) -> float:
-  return size / (2 * math.sin(math.pi/sides))
+def regular_polygon_radius(sides: int, side_lenght: float) -> float:
+  return side_lenght / (2 * math.sin(math.pi/sides))
+
+def Vector2_from_polar(magnitude: float, angle_rad: float) -> Vector2:
+  return magnitude * Vector2(math.cos(angle_rad), math.sin(angle_rad))
+
 
 
 class OrbitFollowRing:
   def __init__(self):
     self.angle = 0
-    self.radius = 1
+    self.radius: float = 1
     self.angles: list[float] = []
 
   def add_angle(self, degree: int):
@@ -52,8 +56,6 @@ class OrbitFollow:
     self.__last_distance = self.spacing
     self.__last_speed = self.speed
     self.__total_size = 0
-    
-    if precise: self.adapt_rings = self.adapt_rings_precise
 
   def update_pos(self, new_pos: Vector2):
     """Update the position of the leader"""
@@ -171,7 +173,7 @@ class OrbitFollow:
         step = (PI2 - angle) / len(in_ring)
         ring.angles.append(0)
         for i in range(1, len(in_ring)):
-          ring.angles.append(ring.angles[-1] + step + advance_on_circle(ring.radius, in_ring[i-1] + self.spacing + in_ring[i]))
+          ring.angles.append(ring.angles[-1] + bonus_angle + advance_on_circle(ring.radius, in_ring[i-1] + self.follower_spacing + in_ring[i]))
         
         total_radius += 2*biggest + self.radius_gap
         ring_i += 1
@@ -181,6 +183,66 @@ class OrbitFollow:
     # Remove empty rings
     self.rings = self.rings[:ring_i]
   
+  def adapt_rings_even_placement(self):
+    """Place followers with even spacing between their centers."""
+    
+    # Tracking variables
+    ring_i: int = 0
+    total_radius: float = self.ring_spacing + self.leader.size
+    to_add: list[float] = [f.size for f in self.followers[::-1]]
+    
+    # Ring specific variables
+    in_ring: list[float] = []
+    longest_side: float = 0
+    biggest: float = 0
+    previous_biggest: float = 0
+  
+    while to_add:
+      in_ring.append(to_add.pop())
+      current_size = in_ring[-1]
+      
+      if current_size > biggest:
+        previous_biggest = biggest
+        biggest = current_size
+      
+      if len(in_ring) > 1:
+        longest_side = max(longest_side, current_size + in_ring[-2] + self.follower_spacing)
+      
+      overfits = (
+        len(in_ring) > 2
+        and regular_polygon_radius(len(in_ring), longest_side) > total_radius + biggest
+      )
+      
+      if overfits or not to_add:
+        if overfits:
+          # Remove the follower who is overflowing
+          to_add.append(in_ring.pop())
+          
+          if to_add[-1] > current_size: # Don't use min() it won't work in every case
+            biggest = previous_biggest
+            # Don't need to update longest_side.
+        
+        # Create the new ring with every selected followers
+        ring = self.get_ring(ring_i)
+        ring.radius = total_radius + biggest
+        step = PI2 / len(in_ring)
+        ring.angles = [step * i for i in range(len(in_ring))]
+        
+        # Progress
+        total_radius += 2*biggest + self.follower_spacing
+        ring_i += 1
+        
+        # Clean up variables
+        in_ring.clear()
+        biggest = 0
+        previous_biggest = 0
+        longest_side = 0
+    
+    # Remove empty rings
+    self.rings = self.rings[:ring_i]
+
+  adapt_rings = adapt_rings_even_spacing
+
   def check_rings(self):
     """Recalculate the rings if .radius, .distance or a follower size has been changed"""
     total = sum(map(lambda f: f.size, self.followers))
@@ -207,7 +269,10 @@ class OrbitFollow:
     self.adapt_rings()
 
   def pop_follower(self, index: int=-1):
-    self.remove_follower(self.followers[index])
+    removed = self.followers.pop(index)
+    # Adapt rings
+    self.__total_size -= removed.size
+    self.adapt_rings()
 
   def remove_follower(self, follower: OrbitFollowElement):
     """Remove a follower of the rings"""

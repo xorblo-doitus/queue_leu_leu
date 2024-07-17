@@ -8,6 +8,10 @@ SPEED_SCALE_RATIO = SPEED_SCALE.as_integer_ratio()
 
 class OrbitFollowExample(OrbitFollow):
   """Inherit the OrbitFollow class to draw elements and handle keyboard"""
+  ring_builder_names = {
+    OrbitFollow.adapt_rings_even_spacing: "Even spacing",
+    OrbitFollow.adapt_rings_even_placement: "Even placement"
+  }
 
   def draw(self, debug=True):
     fsize = len(self.followers)
@@ -51,11 +55,11 @@ class OrbitFollowExample(OrbitFollow):
       return True
 
     elif keys[pygame.K_EQUALS]:
-      orbit.spacing += 1
+      orbit.follower_spacing += 1
       return True
 
     elif keys[pygame.K_6]:
-      orbit.spacing -= 1
+      orbit.follower_spacing -= 1
       return True
 
     elif keys[pygame.K_UP]:
