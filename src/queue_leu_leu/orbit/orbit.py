@@ -87,17 +87,20 @@ class OrbitFollow:
     # Tracking variables
     ring_i: int = 0
     total_radius: float = self.ring_spacing + self.leader.size
-    to_add: list[float] = [f.size for f in self.followers[::-1]]
+    to_add: list[float] = [f.size for f in self.followers]
     
     # Ring specific variables
-    in_ring: list[float] = []
+    # in_ring: list[float] = []
+    start_i = 0
+    current_i = -1
     angle: float = 0
     biggest: float = 0
     previous_biggest: float = 0
     
-    while to_add:
-      in_ring.append(to_add.pop())
-      current_size: float = in_ring[-1]
+    while current_i < len(to_add) - 1:
+      # in_ring.append(to_add.pop())
+      current_i += 1
+      current_size: float = to_add[current_i]
       
       if current_size > biggest:
         previous_biggest = biggest
@@ -105,51 +108,54 @@ class OrbitFollow:
         
         # Recalculate previous angles
         angle = 0
-        for i in range(len(in_ring) - 2):
-          angle += advance_on_circle(total_radius + biggest, in_ring[i] + self.follower_spacing + in_ring[i+1])
+        for i in range(start_i, current_i - 1):
+          angle += advance_on_circle(total_radius + biggest, to_add[i] + self.follower_spacing + to_add[i+1])
       
-      if len(in_ring) >= 2:
-        angle += advance_on_circle(total_radius + biggest, in_ring[-2] + self.follower_spacing + current_size)
+      if current_i - start_i >= 1:
+        angle += advance_on_circle(total_radius + biggest, to_add[current_i-1] + self.follower_spacing + current_size)
       
       overfits = (
-        len(in_ring) > 2
-        and angle + advance_on_circle(total_radius + biggest, current_size + self.follower_spacing + in_ring[0]) > PI2
+        current_i - start_i > 1
+        and angle + advance_on_circle(total_radius + biggest, current_size + self.follower_spacing + to_add[start_i]) > PI2
       )
       
-      if overfits or not to_add:
+      if overfits or current_i >= len(to_add) - 1:
         if overfits:
           # Remove the follower who is overflowing
-          to_add.append(in_ring.pop())
+          # to_add.append(in_ring.pop())
+          current_i -= 1
           
-          if to_add[-1] > current_size: # Don't use min() it won't work in every case
+          if to_add[current_i+1] > current_size: # Don't use min() it won't work in every case
             biggest = previous_biggest
             angle = 0
-            for i in range(len(in_ring) - 2):
-              angle += advance_on_circle(total_radius + biggest, in_ring[i] + self.follower_spacing + in_ring[i+1])
-          elif len(in_ring) >= 1:
-            angle -= advance_on_circle(total_radius + biggest, in_ring[-1] + self.follower_spacing + to_add[-1])
+            for i in range(start_i, current_i - 1):
+              angle += advance_on_circle(total_radius + biggest, to_add[i] + self.follower_spacing + to_add[i+1])
+          elif current_i - start_i >= 0:
+            angle -= advance_on_circle(total_radius + biggest, to_add[current_i] + self.follower_spacing + to_add[current_i+1])
         
-        angle += advance_on_circle(total_radius + biggest, in_ring[-1] + self.follower_spacing + in_ring[0])
+        angle += advance_on_circle(total_radius + biggest, to_add[current_i] + self.follower_spacing + to_add[start_i])
         
         # Create the new ring with every selected followers
         ring = self.get_ring(ring_i)
         ring.radius = total_radius + biggest
-        bonus_angle = (PI2 - angle) / len(in_ring)
+        bonus_angle = (PI2 - angle) / (current_i - start_i + 1)
         ring.angles.clear()
         ring.angles.append(0)
-        for i in range(1, len(in_ring)):
-          ring.angles.append(ring.angles[-1] + bonus_angle + advance_on_circle(ring.radius, in_ring[i-1] + self.follower_spacing + in_ring[i]))
+        for i in range(start_i + 1, current_i + 1):
+          ring.angles.append(ring.angles[-1] + bonus_angle + advance_on_circle(ring.radius, to_add[i-1] + self.follower_spacing + to_add[i]))
         
         # Progress
         total_radius += 2*biggest + self.follower_spacing
         ring_i += 1
         
         # Clean up variables
-        in_ring.clear()
+        # in_ring.clear()
+        start_i = current_i + 1
+        current_i = start_i - 1
         angle = 0
         biggest = 0
         previous_biggest = 0
-    
+      
     # Remove empty rings
     self.rings = self.rings[:ring_i]
   
