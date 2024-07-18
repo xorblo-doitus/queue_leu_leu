@@ -8,6 +8,12 @@ SPEED_SCALE_RATIO = SPEED_SCALE.as_integer_ratio()
 
 class OrbitFollowExample(OrbitFollow):
   """Inherit the OrbitFollow class to draw elements and handle keyboard"""
+  adapter_names = {
+    OrbitFollow.adapt_rings_even_spacing_no_retrocorrection: "Even spacing without retrocorrection",
+    OrbitFollow.adapt_rings_even_spacing: "Even spacing",
+    OrbitFollow.adapt_rings_even_placement: "Even placement"
+  }
+  adpaters = list(adapter_names.keys())
 
   def draw(self, debug=True):
     fsize = len(self.followers)
@@ -16,7 +22,8 @@ class OrbitFollowExample(OrbitFollow):
       things = (
         "Followers "+str(fsize),
         "Spacing   "+str(self.spacing),
-        "Radius    "+str(self.radius_gap),
+        "Gap       "+str(self.gap),
+        "Mode      "+str(OrbitFollowExample.adapter_names[self.adapt_rings.__func__]),
         "Speed     "+str(self.speed)+" / "+str(SPEED_SCALE_RATIO[1]),
         "Angles    "+", ".join(str(int(math.degrees(i.angle))).rjust(3) for i in self.rings),
         "Rings     "+", ".join(str(i.radius).rjust(3) for i in self.rings),
@@ -67,11 +74,16 @@ class OrbitFollowExample(OrbitFollow):
       return True
 
     elif keys[pygame.K_RIGHT]:
-      orbit.radius_gap += 2
+      orbit.gap += 2
       return True
     
     elif keys[pygame.K_LEFT]:
-      orbit.radius_gap -= 2
+      orbit.gap -= 2
+      return True
+    
+    elif keys[pygame.K_m]:
+      orbit.adapt_rings = OrbitFollowExample.adpaters[OrbitFollowExample.adpaters.index(orbit.adapt_rings.__func__) - 1].__get__(orbit, OrbitFollowExample)
+      orbit.adapt_rings()
       return True
 
     return False
@@ -82,8 +94,7 @@ window = pygame.display.set_mode((500, 500), pygame.RESIZABLE)
 clock = pygame.time.Clock()
 font = pygame.font.SysFont('Consolas', 16)
 
-orbit = OrbitFollowExample(16, 24, 1, OrbitFollowElement(pygame.Vector2(100, 100), 5),
-                           precise=False) # options
+orbit = OrbitFollowExample(16, 24, 1, OrbitFollowElement(pygame.Vector2(100, 100), 5))
 run = True
 while run:
     clock.tick(60)
