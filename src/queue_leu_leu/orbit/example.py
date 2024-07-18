@@ -9,9 +9,9 @@ SPEED_SCALE_RATIO = SPEED_SCALE.as_integer_ratio()
 class OrbitFollowExample(OrbitFollow):
   """Inherit the OrbitFollow class to draw elements and handle keyboard"""
   adapter_names = {
-    OrbitFollow.adapt_rings_even_spacing_no_retrocorrection: "Even spacing without retrocorrection",
-    OrbitFollow.adapt_rings_even_spacing: "Even spacing",
-    OrbitFollow.adapt_rings_even_placement: "Even placement"
+    OrbitFollow.adapt_compact_approx: "Compact Approx",
+    OrbitFollow.adapt_compact: "Compact",
+    OrbitFollow.adapt_fast: "Fast"
   }
   adpaters = list(adapter_names.keys())
 

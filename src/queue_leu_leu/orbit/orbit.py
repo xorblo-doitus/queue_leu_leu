@@ -77,9 +77,10 @@ class OrbitFollow:
         self.followers[i].pos = self.leader.pos + Vector2_polar(ring.radius, ring.angle + angle)
         i += 1
   
-  def adapt_rings_even_spacing_no_retrocorrection(self):
+  def adapt_compact_approx(self):
     """
     Place followers with even spacing between them.
+    This mode is faster than :py:meth:`adapt_compact`.
     WARNING: this method can create overlapping followers.
     """
     for ring in self.rings: ring.angles.clear()
@@ -125,8 +126,11 @@ class OrbitFollow:
     self.rings = self.rings[:ring]
   
   # WARN WARNING TODO FIXME DEPRECATED (potentially) This method was rewrote in another branch while waiting for profiling. If a performance increase is confirmed, it will be replaced.
-  def adapt_rings_even_spacing(self):
-    """Place followers with even spacing between them."""
+  def adapt_compact(self):
+    """
+    Place followers with even spacing between them.
+    This mode is slower than :py:meth:`adapt_compact_approx`.
+    """
     
     # Tracking variables
     ring_i: int = 0
@@ -195,8 +199,11 @@ class OrbitFollow:
     # Remove empty rings
     self.rings = self.rings[:ring_i]
   
-  def adapt_rings_even_placement(self):
-    """Place followers with even spacing between their centers."""
+  def adapt_fast(self):
+    """
+    Place followers with even spacing between their centers.
+    This mode is the faster.
+    """
     
     # Tracking variables
     ring_i: int = 0
@@ -253,7 +260,7 @@ class OrbitFollow:
     # Remove empty rings
     self.rings = self.rings[:ring_i]
 
-  adapt_rings = adapt_rings_even_spacing
+  adapt_rings = adapt_compact
 
   def check_rings(self):
     """Recalculate the rings if .radius, .distance or a follower size has been changed"""
