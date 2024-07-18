@@ -78,7 +78,7 @@ class OrbitFollow:
   def adapt_compact_approx(self):
     """
     Place followers with even spacing between them.
-    This mode is faster than :py:meth:`adapt_compact`.
+    This mode is faster than :py:meth:`adapt_compact`. \n
     WARNING: this method can create overlapping followers.
     """
     for ring in self.rings: ring.angles.clear()
@@ -92,24 +92,26 @@ class OrbitFollow:
     for i, f in enumerate(self.followers):
       in_ring.append(f.size)
       size = in_ring[-1]
+      new_radius = total_radius + biggest
       
       if size > biggest:
         biggest = size
+        new_radius = total_radius + biggest
         # Recalculate previous angles
         angle = 0
         for ii in range(len(in_ring) - 2):
-          angle += advance_on_circle(total_radius + biggest, in_ring[ii] + self.spacing + in_ring[ii+1])
-      
+          angle += advance_on_circle(new_radius, in_ring[ii] + self.spacing + in_ring[ii+1])
+
       if len(in_ring) >= 2:
-        angle += advance_on_circle(total_radius + biggest, in_ring[-2] + self.spacing + size)
+        angle += advance_on_circle(new_radius, in_ring[-2] + self.spacing + size)
       
-      total_angle = angle + advance_on_circle(total_radius + biggest, size + self.spacing + in_ring[0])
+      total_angle = angle + advance_on_circle(new_radius, size + self.spacing + in_ring[0])
       
       if (len(in_ring) > 2 and total_angle > PI2) or i >= max_i:
         angle = total_angle
         
         r = self.get_ring(ring)
-        r.radius = total_radius + biggest
+        r.radius = new_radius
         step = (PI2 - angle) / len(in_ring)
         r.angles.append(0)
         for ii in range(1, len(in_ring)):
