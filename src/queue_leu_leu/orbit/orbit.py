@@ -197,8 +197,6 @@ class OrbitFollow:
         # Clean up variables
         angle = biggest = last_biggest = 0
         start_i = end_i + 1
-        # TODO this is useless, no ?
-        end_i = start_i - 1
     
     # Remove empty rings
     self.rings = self.rings[:ring_i]
