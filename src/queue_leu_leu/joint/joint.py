@@ -37,9 +37,8 @@ class JointFollow:
     self.followers.append(follower)
 
   def pop_follower(self, index: int=-1):
-    self.remove_follower(self.followers[index])
+    self.followers.pop(index)
 
   def remove_follower(self, follower: JointFollowElement):
     """Remove a follower of the trail"""
-    if self.followers:
-      self.followers.remove(follower)
+    self.pop_follower(self.followers.index(follower))

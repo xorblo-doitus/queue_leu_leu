@@ -98,14 +98,13 @@ class TrailFollow:
     self.adapt_trail()
 
   def pop_follower(self, index: int=-1):
-    self.remove_follower(self.followers[index])
+    removed: TrailFollowElement = self.followers.pop(index)
+    self.__total_size -= removed.size
+    self.adapt_trail()
 
   def remove_follower(self, follower: TrailFollowElement):
     """Remove a follower of the trail"""
-    if self.followers:
-      self.followers.remove(follower)
-      self.__total_size -= follower.size
-      self.adapt_trail()
+    self.pop_follower(self.followers.index(follower))
 
   def adapt_trail(self):
     """

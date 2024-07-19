@@ -189,12 +189,11 @@ class ArcFollow:
     self.followers.append(follower)
 
   def pop_follower(self, index: int=-1):
-    self.remove_follower(self.followers[index])
+    self.followers.pop(index)
 
   def remove_follower(self, follower: ArcFollowElement):
-    """Remove a follower"""
-    if self.followers:
-      self.followers.remove(follower)
+    """Remove a follower of the trail"""
+    self.pop_follower(self.followers.index(follower))
   
   def get_ring(self, i: int) -> ArcFollowRing:
     """Create missing rings if needed and return the requested one"""

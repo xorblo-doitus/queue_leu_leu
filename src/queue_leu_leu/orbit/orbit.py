@@ -295,7 +295,7 @@ class OrbitFollow:
     self.adapt_rings()
 
   def pop_follower(self, index: int=-1):
-    removed = self.followers.pop(index)
+    removed: OrbitFollowElement = self.followers.pop(index)
 
     # Adapt rings
     self.__total_size -= removed.size

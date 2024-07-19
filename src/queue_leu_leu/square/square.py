@@ -125,10 +125,9 @@ class SquareFollow:
     self.check_rings()
 
   def pop_follower(self, index: int=-1):
-    self.remove_follower(self.followers[index])
+    self.followers.pop(index)
+    self.adapt_rings()
 
   def remove_follower(self, follower: SquareFollowElement):
     """Remove a follower of the rings"""
-    if self.followers:
-      self.followers.remove(follower)
-      self.adapt_rings()
+    self.pop_follower(self.followers.index(follower))
