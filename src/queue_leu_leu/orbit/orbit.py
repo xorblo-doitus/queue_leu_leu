@@ -305,4 +305,3 @@ class OrbitFollow:
     for _ in range(i-len(self.rings)+1):
       self.rings.append(OrbitFollowRing())
     return self.rings[i]
-    return self.rings[i]
