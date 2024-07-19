@@ -146,6 +146,7 @@ class OrbitFollow:
     angle: float = 0
     biggest: float = 0
     last_biggest: float = 0
+    radius: float = 0
     
     while end_i < len(to_add) - 1:
       end_i += 1
@@ -154,18 +155,19 @@ class OrbitFollow:
       if size > biggest:
         last_biggest = biggest
         biggest = size
+        radius = total_radius + biggest
         
         # Recalculate previous angles
         angle = 0
         for i in range(start_i, end_i - 1):
-          angle += advance_on_circle(total_radius + biggest, chords[i])
+          angle += advance_on_circle(radius, chords[i])
       
       if end_i - start_i >= 1:
-        angle += advance_on_circle(total_radius + biggest, chords[end_i-1])
+        angle += advance_on_circle(radius, chords[end_i-1])
       
       overfits = (
         end_i - start_i > 1
-        and angle + advance_on_circle(total_radius + biggest, size + self.spacing + to_add[start_i]) > PI2
+        and angle + advance_on_circle(radius, size + self.spacing + to_add[start_i]) > PI2
       )
       
       if overfits or end_i >= len(to_add) - 1:
@@ -175,21 +177,23 @@ class OrbitFollow:
           
           if to_add[end_i+1] > size: # Don't use min() it won't work in every case
             biggest = last_biggest
+            radius = total_radius + biggest
             angle = 0
             for i in range(start_i, end_i - 1):
-              angle += advance_on_circle(total_radius + biggest, chords[i])
+              angle += advance_on_circle(radius, chords[i])
           elif end_i - start_i >= 0:
-            angle -= advance_on_circle(total_radius + biggest, chords[end_i])
+            angle -= advance_on_circle(radius, chords[end_i])
         
-        angle += advance_on_circle(total_radius + biggest, to_add[end_i] + self.spacing + to_add[start_i])
+        angle += advance_on_circle(radius, to_add[end_i] + self.spacing + to_add[start_i])
         
         # Create the new ring with every selected followers
         ring = self.get_ring(ring_i)
-        ring.radius = total_radius + biggest
+        ring.radius = radius
         extra = (PI2 - angle) / (end_i - start_i + 1)
-        ring.angles = [0]
+        angles = [0]
         for i in range(start_i, end_i):
-          ring.angles.append(ring.angles[-1] + extra + advance_on_circle(ring.radius, chords[i]))
+          angles.append(angles[-1] + extra + advance_on_circle(radius, chords[i]))
+        ring.angles = angles
         
         # Progress
         total_radius += 2*biggest + self.gap
