@@ -23,7 +23,7 @@ class OrbitFollowRing:
     self.radius: float = 1
     self.angles: list[float] = []
 
-  def add_angle(self, degree: int):
+  def add_angle(self, degree: int) -> None:
     self.angle += math.radians(degree)
     self.angle %= PI2
 
@@ -56,7 +56,7 @@ class OrbitFollow:
 
     if adapter: self.adapt_rings: callable = adapter
     
-  def update_pos(self, new_pos: Vector2):
+  def update_pos(self, new_pos: Vector2) -> None:
     """Update the position of the leader"""
     self.check_rings()
     self.leader.pos = new_pos
@@ -76,7 +76,7 @@ class OrbitFollow:
         self.followers[i].pos = self.leader.pos + Vector2(math.cos(shift), math.sin(shift)) * ring.radius
         i += 1
   
-  def adapt_compact_approx(self):
+  def adapt_compact_approx(self) -> None:
     """
     Place followers with even spacing between them.
     This mode is faster than :py:meth:`adapt_compact`. \n
@@ -126,7 +126,7 @@ class OrbitFollow:
     # Remove empty rings
     self.rings = self.rings[:ring]
   
-  def adapt_compact(self):
+  def adapt_compact(self) -> None:
     """
     Place followers with even spacing between them.
     This mode is slower than :py:meth:`adapt_compact_approx`.
@@ -202,7 +202,7 @@ class OrbitFollow:
     # Remove empty rings
     self.rings = self.rings[:ring_i]
   
-  def adapt_fast(self):
+  def adapt_fast(self) -> None:
     """
     Place followers with even spacing between their centers.
     This mode is the faster.
@@ -263,7 +263,7 @@ class OrbitFollow:
 
   adapt_rings = adapt_compact
 
-  def check_rings(self):
+  def check_rings(self) -> None:
     """Recalculate the rings if .gap, .spacing or a follower size has been changed"""
     total = sum(map(lambda f: f.size, self.followers))
     if (self.gap != self.__last_gap or 
@@ -282,7 +282,7 @@ class OrbitFollow:
       self.speed = int(max(min(self.speed, 180 / SPEED_SCALE), -180 / SPEED_SCALE))
       self.__last_speed = self.speed
 
-  def add_follower(self, follower: OrbitFollowElement):
+  def add_follower(self, follower: OrbitFollowElement) -> None:
     """Add a new follower in the rings"""
     self.followers.append(follower)
     
@@ -290,10 +290,10 @@ class OrbitFollow:
     self.__total_size += follower.size
     self.adapt_rings()
 
-  def pop_follower(self, index: int=-1):
+  def pop_follower(self, index: int=-1) -> None:
     self.remove_follower(self.followers[index])
 
-  def remove_follower(self, follower: OrbitFollowElement):
+  def remove_follower(self, follower: OrbitFollowElement) -> None:
     """Remove a follower of the rings"""
     if self.followers:
       self.followers.remove(follower)
