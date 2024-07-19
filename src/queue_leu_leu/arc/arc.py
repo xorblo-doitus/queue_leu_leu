@@ -52,7 +52,7 @@ class ArcFollow:
   @property
   def max_angle_deg(self) -> float:
     """WARNING: The arc angle is twice this angle"""
-    return self.max_angle / pi * 90
+    return round(self.max_angle / pi * 90, 5)
   
   @max_angle_deg.setter
   def max_angle_deg(self, new: float):
@@ -60,7 +60,7 @@ class ArcFollow:
 
   @property
   def rotation_deg(self) -> float:
-    return self.rotation / pi * 180
+    return int(self.rotation / pi * 180)
   
   @rotation_deg.setter
   def rotation_deg(self, new: float):
