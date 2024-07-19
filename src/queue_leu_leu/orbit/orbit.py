@@ -6,7 +6,6 @@ try: from queue_leu_leu.common.circle import *
 except ImportError:
   import sys, os.path as op
   SCRIPT_DIR = op.dirname(op.abspath(__file__))
-  print(SCRIPT_DIR)
   sys.path.append(op.join(op.dirname(SCRIPT_DIR), "common"))
   from circle import * # type: ignore
 
