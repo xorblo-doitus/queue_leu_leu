@@ -2,7 +2,6 @@
 from pygame import Vector2
 from math import pi, asin, cos, sin
 
-
 SPEED_SCALE = 1 / 8
 PI2 = 2 * pi
 
@@ -11,11 +10,6 @@ def advance_on_circle(radius: float, chord: float, fallback: float = PI2) -> flo
   alpha: float = chord / (2*radius)
   if not -1 <= alpha <=1: return fallback
   return 2 * asin(alpha)
-
-
-def Vector2_polar(magnitude: float, angle_rad: float) -> Vector2:
-  return magnitude * Vector2(cos(angle_rad), sin(angle_rad))
-
 
 def regular_polygon_radius(sides: int, side: float) -> float:
   return side / (2 * sin(pi/sides))
@@ -76,7 +70,8 @@ class OrbitFollow:
     i = 0
     for ring in self.rings:
       for angle in ring.angles:
-        self.followers[i].pos = self.leader.pos + Vector2_polar(ring.radius, ring.angle + angle)
+        shift = ring.angle + angle
+        self.followers[i].pos = self.leader.pos + Vector2(cos(shift), sin(shift)) * ring.radius
         i += 1
   
   def adapt_compact_approx(self) -> None:
