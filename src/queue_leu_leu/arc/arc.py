@@ -1,19 +1,24 @@
 # You can use any other library that includes standard Vector things
 from pygame import Vector2
-import math
+from math import pi, asin, cos, sin
 
-try: from queue_leu_leu.common.circle import *
-except ImportError:
-  import sys, os.path as op
-  SCRIPT_DIR = op.dirname(op.abspath(__file__))
-  sys.path.append(op.join(op.dirname(SCRIPT_DIR), "common"))
-  from circle import * # type: ignore
+
+PI2 = 2 * pi
+
+def advance_on_circle(radius: float, chord: float, fallback: float = PI2) -> float:
+  alpha: float = chord / (2*radius)
+  if not -1 <= alpha <=1: return fallback
+  return 2 * asin(alpha)
+
+
+def Vector2_polar(magnitude: float, angle_rad: float) -> Vector2:
+  return magnitude * Vector2(cos(angle_rad), sin(angle_rad))
 
 
 def get_edge_angle(radius: float, distance: float, fallback: float=0) -> float:
   alpha = distance/radius
   if not -1<=alpha<=1: return fallback
-  return math.asin(alpha)
+  return asin(alpha)
 
 
 class ArcFollowRing:
@@ -49,19 +54,19 @@ class ArcFollow:
   @property
   def max_angle_deg(self) -> float:
     """WARNING: The arc angle is twice this angle"""
-    return self.max_angle / math.pi * 90
+    return self.max_angle / pi * 90
   
   @max_angle_deg.setter
   def max_angle_deg(self, new: float):
-    self.max_angle = new / 90 * math.pi
+    self.max_angle = new / 90 * pi
 
   @property
   def rotation_deg(self) -> float:
-    return self.rotation / math.pi * 180
+    return self.rotation / pi * 180
   
   @rotation_deg.setter
   def rotation_deg(self, new: float):
-    self.rotation = new / 180 * math.pi
+    self.rotation = new / 180 * pi
 
   def update_pos(self, new_pos: Vector2):
     """Update the position of the leader"""
@@ -141,7 +146,7 @@ class ArcFollow:
         
         # Choose ring radius
         if self.strong and start_i == end_i and 2*get_edge_angle(total_radius + biggest, to_add[end_i]) > self.max_angle:
-          ring.radius = biggest / math.sin(self.max_angle/2) # Non infinity is ensured by the fact that 0 < max_angle < 180
+          ring.radius = biggest / sin(self.max_angle/2) # Non infinity is ensured by the fact that 0 < max_angle < 180
         else:
           ring.radius = total_radius + biggest
         
@@ -180,8 +185,8 @@ class ArcFollow:
     if self.spacing < 0: self.spacing = 0
     if self.gap < 0: self.gap = 0
     # Check rotation
-    if self.rotation > math.pi: self.rotation -= math.pi
-    elif self.rotation < -math.pi: self.rotation += math.pi
+    if self.rotation > pi: self.rotation -= pi
+    elif self.rotation < -pi: self.rotation += pi
 
   def add_follower(self, follower: ArcFollowElement):
     """Add a new follower"""

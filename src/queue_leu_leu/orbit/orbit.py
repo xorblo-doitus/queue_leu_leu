@@ -1,19 +1,24 @@
 # You can use any other library that includes standard Vector things
 from pygame import Vector2
-import math
+from math import pi, asin, cos, sin
 
-try: from queue_leu_leu.common.circle import *
-except ImportError:
-  import sys, os.path as op
-  SCRIPT_DIR = op.dirname(op.abspath(__file__))
-  sys.path.append(op.join(op.dirname(SCRIPT_DIR), "common"))
-  from circle import * # type: ignore
 
 SPEED_SCALE = 1 / 8
+PI2 = 2 * pi
+
+
+def advance_on_circle(radius: float, chord: float, fallback: float = PI2) -> float:
+  alpha: float = chord / (2*radius)
+  if not -1 <= alpha <=1: return fallback
+  return 2 * asin(alpha)
+
+
+def Vector2_polar(magnitude: float, angle_rad: float) -> Vector2:
+  return magnitude * Vector2(cos(angle_rad), sin(angle_rad))
 
 
 def regular_polygon_radius(sides: int, side: float) -> float:
-  return side / (2 * math.sin(math.pi/sides))
+  return side / (2 * sin(pi/sides))
 
 
 class OrbitFollowRing:
@@ -23,7 +28,7 @@ class OrbitFollowRing:
     self.angles: list[float] = []
 
   def add_angle(self, degree: int) -> None:
-    self.angle += math.radians(degree)
+    self.angle += degree / 180 * pi
     self.angle %= PI2
 
 
@@ -71,8 +76,7 @@ class OrbitFollow:
     i = 0
     for ring in self.rings:
       for angle in ring.angles:
-        shift = ring.angle + angle
-        self.followers[i].pos = self.leader.pos + Vector2(math.cos(shift), math.sin(shift)) * ring.radius
+        self.followers[i].pos = self.leader.pos + Vector2_polar(ring.radius, ring.angle + angle)
         i += 1
   
   def adapt_compact_approx(self) -> None:
