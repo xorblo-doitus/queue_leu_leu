@@ -10,6 +10,9 @@ def advance_on_circle(radius: float, chord: float, fallback: float = PI2) -> flo
   if not -1 <= alpha <=1: return fallback
   return 2 * asin(alpha)
 
+def Vector2_polar(magnitude: float, angle_rad: float) -> Vector2:
+  return magnitude * Vector2(cos(angle_rad), sin(angle_rad))
+
 def get_edge_angle(radius: float, distance: float, fallback: float=0) -> float:
   alpha = distance/radius
   if not -1<=alpha<=1: return fallback
@@ -74,8 +77,7 @@ class ArcFollow:
     i = 0
     for ring in self.rings:
       for angle in ring.angles:
-        shift = ring.angle + angle
-        self.followers[i].pos = self.leader.pos + Vector2(cos(shift), sin(shift)) * ring.radius
+        self.followers[i].pos = self.leader.pos + Vector2_polar(ring.radius, angle + self.rotation)
         i += 1
   
   def adapt(self):
