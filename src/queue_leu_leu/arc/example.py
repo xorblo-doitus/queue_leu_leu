@@ -1,8 +1,18 @@
-try: from .arc import ArcFollow, ArcFollowElement
+try: from .arc import ArcFollow, ArcFollowElement, Vector2_polar
 except ImportError:
-  from arc import ArcFollow, ArcFollowElement
-import pygame, random
+  from arc import ArcFollow, ArcFollowElement, Vector2_polar
+import pygame, random, math
 
+rainbow = [
+  (255, 0, 0),
+  (255, 125, 0),
+  (255, 255, 0),
+  (0, 255, 0),
+  (0, 255, 255),
+  (0, 0, 255),
+  (125, 0, 125),
+]
+is_rainbow = False
 
 class ArcFollowExample(ArcFollow):
   """Inherit the Arc class to draw elements and handle keyboard and mouse"""
@@ -13,19 +23,41 @@ class ArcFollowExample(ArcFollow):
     if debug:
       things = (
         "Followers "+str(fsize),
-        "Distance  "+str(self.distance),
-        "Radius    "+str(self.radius),
-        "Sides     "+str(self.max_angle),
-        "Rotation  "+str(self.rotation),
+        "Spacing   "+str(self.spacing),
+        "Gap       "+str(self.gap),
+        "Max Angle "+str(self.max_angle_deg),
+        "Rotation  "+str(self.rotation_deg),
+        "Strong    "+str(self.strong),
+        "Uniform   "+str(self.uniform),
       )
       for i, t in enumerate(things):
         window.blit(font.render(t, False, 0xffffffff), (10, 10+20*i))
-
+    
+    colors = []
+    if is_rainbow:
+      for i, r in enumerate(self.rings):
+        colors += [rainbow[i%len(rainbow)]] * len(r.angles)
+    
     for i, f in enumerate(self.followers):
-      pygame.draw.circle(window, (0, 255*i/fsize, 255), f.pos, f.size)
+      pygame.draw.circle(window, colors[i] if is_rainbow else (0, 255*i/fsize, 255), f.pos, f.size)
       if debug:
         pygame.draw.circle(window, (255, 0, 0), f.pos, 3)
+    
+    if debug:
+      pygame.draw.line(window, (255, 0, 0), self.leader.pos, self.leader.pos + Vector2_polar((self.rings[-1].radius if self.rings else 0)+100, self.rotation), 2)
+      pygame.draw.line(window, (255, 0, 0), self.leader.pos, self.leader.pos + Vector2_polar((self.rings[-1].radius if self.rings else 0)+100, self.rotation + self.max_angle), 2)
       
+      for ring in self.rings:
+        pygame.draw.circle(window, (100, 100, 0), self.leader.pos, ring.radius, 1)
+        pygame.draw.arc(
+          window,
+          (255, 255, 0),
+          pygame.Rect(self.leader.pos.x - ring.radius, self.leader.pos.y - ring.radius, 2*ring.radius, 2*ring.radius),
+          -self.max_angle-self.rotation,
+          -self.rotation,
+          1
+        )
+    
     pygame.draw.circle(window, (255, 0, 0), self.leader.pos, self.leader.size)
 
   def handle_keyboard(self, keys):
@@ -44,33 +76,46 @@ class ArcFollowExample(ArcFollow):
       return True
 
     elif keys[pygame.K_EQUALS]:
-      arc.distance += 1
+      arc.spacing += 1
       return True
 
     elif keys[pygame.K_6]:
-      arc.distance -= 1
+      arc.spacing -= 1
       return True
 
     elif keys[pygame.K_UP]:
-      arc.radius += 1
+      arc.gap += 1
       return True
 
     elif keys[pygame.K_DOWN]:
-      arc.radius -= 1
+      arc.gap -= 1
       return True
 
     elif keys[pygame.K_RIGHT]:
-      arc.max_angle += 5
+      arc.max_angle_deg += 5
       return True
     
     elif keys[pygame.K_LEFT]:
-      arc.max_angle -= 5
+      arc.max_angle_deg -= 5
+      return True
+    
+    elif keys[pygame.K_u]:
+      arc.uniform = not arc.uniform
+      return True
+    
+    elif keys[pygame.K_s]:
+      arc.strong = not arc.strong
+      return True
+    
+    elif keys[pygame.K_r] and keys[pygame.K_a] and keys[pygame.K_i] and keys[pygame.K_n] and keys[pygame.K_b] and keys[pygame.K_o] and keys[pygame.K_w]:
+      global is_rainbow
+      is_rainbow = not is_rainbow
       return True
 
     return False
 
   def handle_mouse(self, event):
-    arc.rotation += event.y * 5
+    arc.rotation_deg += event.y * 5
 
 
 pygame.init()
