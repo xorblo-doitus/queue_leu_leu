@@ -22,13 +22,13 @@ class ArcFollowExample(ArcFollow):
 
     if debug:
       things = (
-        "Followers "+str(fsize),
-        "Spacing   "+str(self.spacing),
-        "Gap       "+str(self.gap),
-        "Max Angle "+str(self.max_angle_deg),
-        "Rotation  "+str(self.rotation_deg),
-        "Strong    "+str(self.strong),
-        "Uniform   "+str(self.uniform),
+        "Followers  "+str(fsize),
+        "Spacing    "+str(self.spacing),
+        "Gap        "+str(self.gap),
+        "Max Angle≈ "+str(int(round(self.max_angle_deg, 5)))+"°",
+        "Rotation≈  "+str(int(self.rotation_deg))+"°",
+        "Strong     "+str(self.strong),
+        "Uniform    "+str(self.uniform),
       )
       for i, t in enumerate(things):
         window.blit(font.render(t, False, 0xffffffff), (10, 10+20*i))
