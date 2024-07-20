@@ -94,7 +94,7 @@ window = pygame.display.set_mode((500, 500), pygame.RESIZABLE)
 clock = pygame.time.Clock()
 font = pygame.font.SysFont('Consolas', 16)
 
-orbit = OrbitFollowExample(16, 24, 1, OrbitFollowElement(pygame.Vector2(100, 100), 5))
+orbit = OrbitFollowExample(16, 24, 2, OrbitFollowElement(pygame.Vector2(100, 100), 5))
 run = True
 while run:
     clock.tick(60)

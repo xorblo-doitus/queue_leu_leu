@@ -48,6 +48,10 @@ class ArcFollow:
     self.rotation = 0
     self.strong = strong
     self.uniform = uniform
+    self.__last_max_angle = self.max_angle
+    self.__last_gap = self.gap
+    self.__last_spacing = self.spacing
+    self.__total_size = 0
 
   @property
   def max_angle_deg(self) -> float:
@@ -68,9 +72,7 @@ class ArcFollow:
 
   def update_pos(self, new_pos: Vector2):
     """Update the position of the leader"""
-    self.check_properties()
-    self.adapt() # TODO remove this once the change checking is done
-    
+    self.check_rings()
     self.leader.pos = new_pos
     
     # Update followers
@@ -80,10 +82,8 @@ class ArcFollow:
         self.followers[i].pos = self.leader.pos + Vector2_polar(ring.radius, angle + self.rotation)
         i += 1
   
-  def adapt(self):
-    """
-    Update arcs and follower placement
-    """
+  def adapt_rings(self):
+    """Update arcs and follower placement"""
     if not self.followers:
       self.rings.clear()
       return
@@ -174,14 +174,23 @@ class ArcFollow:
     # Remove empty rings
     self.rings = self.rings[:ring_i]
   
-  def check_properties(self):
-    """Security to always have the right properties values"""
-    # Check max angle
-    self.max_angle = max(min(self.max_angle, PI2), 0.03)
-    # Check the distance
-    if self.spacing < 0: self.spacing = 0
-    if self.gap < 0: self.gap = 0
-    # Check rotation
+  def check_rings(self):
+    """Recalculate the rings if .max_angle, .gap, .spacing or a follower size has been changed"""
+    total = sum(map(lambda f: f.size, self.followers))
+    if (self.max_angle != self.__last_max_angle or
+        self.gap != self.__last_gap or 
+        self.spacing != self.__last_spacing or 
+        total != self.__total_size
+    ):
+      self.max_angle = max(min(self.max_angle, PI2), 0.03)
+      self.gap = max(self.gap, 1)
+      self.spacing = max(self.spacing, 0)
+      self.__last_max_angle = self.max_angle
+      self.__last_gap = self.gap
+      self.__last_spacing = self.spacing
+      self.__total_size = total
+      self.adapt_rings()
+      
     if self.rotation > math.pi: self.rotation = -math.pi
     elif self.rotation < -math.pi: self.rotation = math.pi
 

@@ -86,10 +86,12 @@ class ArcFollowExample(ArcFollow):
     
     elif keys[pygame.K_u]:
       arc.uniform = not arc.uniform
+      arc.adapt_rings()
       return True
     
     elif keys[pygame.K_s]:
       arc.strong = not arc.strong
+      arc.adapt_rings()
       return True
 
     return False
