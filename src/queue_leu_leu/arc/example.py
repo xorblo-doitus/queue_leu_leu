@@ -1,18 +1,8 @@
 try: from .arc import ArcFollow, ArcFollowElement, Vector2_polar
 except ImportError:
   from arc import ArcFollow, ArcFollowElement, Vector2_polar
-import pygame, random, math
+import pygame, random
 
-rainbow = [
-  (255, 0, 0),
-  (255, 125, 0),
-  (255, 255, 0),
-  (0, 255, 0),
-  (0, 255, 255),
-  (0, 0, 255),
-  (125, 0, 125),
-]
-is_rainbow = False
 
 class ArcFollowExample(ArcFollow):
   """Inherit the Arc class to draw elements and handle keyboard and mouse"""
@@ -22,24 +12,19 @@ class ArcFollowExample(ArcFollow):
 
     if debug:
       things = (
-        "Followers  "+str(fsize),
-        "Spacing    "+str(self.spacing),
-        "Gap        "+str(self.gap),
-        "Max Angle≈ "+str(int(round(self.max_angle_deg, 5)))+"°",
-        "Rotation≈  "+str(int(self.rotation_deg))+"°",
-        "Strong     "+str(self.strong),
-        "Uniform    "+str(self.uniform),
+        "Followers "+str(fsize),
+        "Spacing   "+str(self.spacing),
+        "Gap       "+str(self.gap),
+        "Max Angle "+str(int(round(self.max_angle_deg, 5)))+"°",
+        "Rotation  "+str(int(self.rotation_deg))+"°",
+        "Strong    "+str(self.strong),
+        "Uniform   "+str(self.uniform),
       )
       for i, t in enumerate(things):
         window.blit(font.render(t, False, 0xffffffff), (10, 10+20*i))
-    
-    colors = []
-    if is_rainbow:
-      for i, r in enumerate(self.rings):
-        colors += [rainbow[i%len(rainbow)]] * len(r.angles)
-    
+
     for i, f in enumerate(self.followers):
-      pygame.draw.circle(window, colors[i] if is_rainbow else (0, 255*i/fsize, 255), f.pos, f.size)
+      pygame.draw.circle(window, (0, 255*i/fsize, 255), f.pos, f.size)
       if debug:
         pygame.draw.circle(window, (255, 0, 0), f.pos, 3)
     
@@ -52,7 +37,7 @@ class ArcFollowExample(ArcFollow):
         pygame.draw.arc(
           window,
           (255, 255, 0),
-          pygame.Rect(self.leader.pos.x - ring.radius, self.leader.pos.y - ring.radius, 2*ring.radius, 2*ring.radius),
+          (self.leader.pos.x - ring.radius, self.leader.pos.y - ring.radius, 2*ring.radius, 2*ring.radius),
           -self.max_angle-self.rotation,
           -self.rotation,
           1
@@ -106,11 +91,6 @@ class ArcFollowExample(ArcFollow):
     elif keys[pygame.K_s]:
       arc.strong = not arc.strong
       return True
-    
-    elif keys[pygame.K_r] and keys[pygame.K_a] and keys[pygame.K_i] and keys[pygame.K_n] and keys[pygame.K_b] and keys[pygame.K_o] and keys[pygame.K_w]:
-      global is_rainbow
-      is_rainbow = not is_rainbow
-      return True
 
     return False
 
@@ -123,7 +103,8 @@ window = pygame.display.set_mode((500, 500), pygame.RESIZABLE)
 clock = pygame.time.Clock()
 font = pygame.font.SysFont('Consolas', 16)
 
-arc = ArcFollowExample(16, 24, 90, ArcFollowElement(pygame.Vector2(100, 100), 5))
+arc = ArcFollowExample(16, 24, 90, ArcFollowElement(pygame.Vector2(100, 100), 5),
+                       strong=False, uniform=False) # options
 run = True
 while run:
     clock.tick(60)

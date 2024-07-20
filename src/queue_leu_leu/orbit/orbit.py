@@ -1,39 +1,39 @@
 # You can use any other library that includes standard Vector things
 from pygame import Vector2
-from math import pi, asin, cos, sin
+import math
 
 SPEED_SCALE = 1 / 8
-PI2 = 2 * pi
+PI2 = 2 * math.pi
 
 
-def advance_on_circle(radius: float, chord: float, fallback: float = PI2) -> float:
-  alpha: float = chord / (2*radius)
+def advance_on_circle(radius: float, chord: float, fallback: float=PI2) -> float:
+  alpha = chord / (2*radius)
   if not -1 <= alpha <=1: return fallback
-  return 2 * asin(alpha)
+  return 2 * math.asin(alpha)
 
 def regular_polygon_radius(sides: int, side: float) -> float:
-  return side / (2 * sin(pi/sides))
+  return side / (2 * math.sin(math.pi/sides))
 
 
 class OrbitFollowRing:
   def __init__(self):
-    self.angle: float = 0
-    self.radius: float = 1
+    self.angle = 0
+    self.radius = 1
     self.angles: list[float] = []
 
-  def add_angle(self, degree: int) -> None:
-    self.angle += degree / 180 * pi
+  def add_angle(self, degree: int):
+    self.angle += math.radians(degree)
     self.angle %= PI2
 
 
 class OrbitFollowElement:
   def __init__(self, pos: Vector2, size: float):
-    self.pos: Vector2 = pos
-    self.size: float = size
+    self.pos = pos
+    self.size = size
 
 
 class OrbitFollow:
-  def __init__(self, spacing: float, gap: float, speed: float, leader: OrbitFollowElement, adapter: callable = None):
+  def __init__(self, spacing: float, gap: float, speed: float, leader: OrbitFollowElement, adapter: 'function'=None):
     """
     :param spacing: distance between followers
     :param gap: minimum distance between rings
@@ -41,20 +41,20 @@ class OrbitFollow:
     :param leader: the leader
     :param adapter: Set to :py:meth:`adapt_rings_even_spacing`, :py:meth:`adapt_rings_even_placement` or :py:meth:`adapt_rings_even_spacing_no_retrocorrection`.
     """
-    self.leader: OrbitFollowElement = leader
+    self.leader = leader
     self.followers: list[OrbitFollowElement] = []
     self.rings: list[OrbitFollowRing] = []
-    self.gap: float = gap
-    self.spacing: float = spacing
-    self.speed: float = speed
-    self.__last_gap: float = self.gap
-    self.__last_spacing: float = self.spacing
-    self.__last_speed: float = self.speed
-    self.__total_size: float = 0
+    self.gap = gap
+    self.spacing = spacing
+    self.speed = speed
+    self.__last_gap = self.gap
+    self.__last_spacing = self.spacing
+    self.__last_speed = self.speed
+    self.__total_size = 0
 
-    if adapter: self.adapt_rings: callable = adapter
+    if adapter: self.adapt_rings = adapter
     
-  def update_pos(self, new_pos: Vector2) -> None:
+  def update_pos(self, new_pos: Vector2):
     """Update the position of the leader"""
     self.check_rings()
     self.leader.pos = new_pos
@@ -71,10 +71,10 @@ class OrbitFollow:
     for ring in self.rings:
       for angle in ring.angles:
         shift = ring.angle + angle
-        self.followers[i].pos = self.leader.pos + Vector2(cos(shift), sin(shift)) * ring.radius
+        self.followers[i].pos = self.leader.pos + Vector2(math.cos(shift), math.sin(shift)) * ring.radius
         i += 1
   
-  def adapt_compact_approx(self) -> None:
+  def adapt_compact_approx(self):
     """
     Place followers with even spacing between them.
     This mode is faster than :py:meth:`adapt_compact`. \n
@@ -124,31 +124,23 @@ class OrbitFollow:
     # Remove empty rings
     self.rings = self.rings[:ring]
   
-  def adapt_compact(self) -> None:
+  def adapt_compact(self):
     """
     Place followers with even spacing between them.
     This mode is slower than :py:meth:`adapt_compact_approx`.
     """
-    
     # Caches
-    to_add: list[float] = [f.size for f in self.followers]
+    to_add = [f.size for f in self.followers]
     chords = [to_add[i] + self.spacing + to_add[i+1] for i in range(len(to_add)-1)] # at i is stored chord between follower i and i+1.
-    
-    # Tracking variables
-    ring_i: int = 0
-    total_radius: float = self.gap + self.leader.size
-    start_i: int = 0
-    end_i: int = -1
-    
-    # Ring specific variables
-    angle: float = 0
-    biggest: float = 0
-    last_biggest: float = 0
-    radius: float = 0
+
+    ring_i = start_i = angle = biggest = last_biggest = 0
+    end_i = -1
+    total_radius = self.gap + self.leader.size
     
     while end_i < len(to_add) - 1:
       end_i += 1
-      size: float = to_add[end_i]
+      size = to_add[end_i]
+      radius = total_radius + biggest
       
       if size > biggest:
         last_biggest = biggest
@@ -204,33 +196,26 @@ class OrbitFollow:
     # Remove empty rings
     self.rings = self.rings[:ring_i]
   
-  def adapt_fast(self) -> None:
+  def adapt_fast(self):
     """
     Place followers with even spacing between their centers.
     This mode is the faster.
     """
-    
-    # Tracking variables
-    ring_i: int = 0
-    total_radius: float = self.gap + self.leader.size
-    to_add: list[float] = [f.size for f in self.followers[::-1]]
-    
-    # Ring specific variables
-    in_ring: list[float] = []
-    longest_side: float = 0
-    biggest: float = 0
-    last_biggest: float = 0
+    ring_i = longest_side = biggest = last_biggest = 0
+    total_radius = self.gap + self.leader.size
+    to_add = [f.size for f in self.followers[::-1]]
+    in_ring = []
   
     while to_add:
       in_ring.append(to_add.pop())
-      current_size: float = in_ring[-1]
+      size = in_ring[-1]
       
-      if current_size > biggest:
+      if size > biggest:
         last_biggest = biggest
-        biggest = current_size
+        biggest = size
       
       if len(in_ring) > 1:
-        longest_side = max(longest_side, current_size + in_ring[-2] + self.spacing)
+        longest_side = max(longest_side, size + in_ring[-2] + self.spacing)
       
       overfits = (
         len(in_ring) > 2
@@ -242,7 +227,7 @@ class OrbitFollow:
           # Remove the follower who is overflowing
           to_add.append(in_ring.pop())
           
-          if to_add[-1] > current_size: # Don't use min() it won't work in every case
+          if to_add[-1] > size: # Don't use min() it won't work in every case
             biggest = last_biggest
             # Don't need to update longest_side.
         
@@ -265,7 +250,7 @@ class OrbitFollow:
 
   adapt_rings = adapt_compact
 
-  def check_rings(self) -> None:
+  def check_rings(self):
     """Recalculate the rings if .gap, .spacing or a follower size has been changed"""
     total = sum(map(lambda f: f.size, self.followers))
     if (self.gap != self.__last_gap or 
@@ -284,7 +269,7 @@ class OrbitFollow:
       self.speed = int(max(min(self.speed, 180 / SPEED_SCALE), -180 / SPEED_SCALE))
       self.__last_speed = self.speed
 
-  def add_follower(self, follower: OrbitFollowElement) -> None:
+  def add_follower(self, follower: OrbitFollowElement):
     """Add a new follower in the rings"""
     self.followers.append(follower)
     
@@ -293,9 +278,7 @@ class OrbitFollow:
     self.adapt_rings()
 
   def pop_follower(self, index: int=-1):
-    removed: OrbitFollowElement = self.followers.pop(index)
-
-    # Adapt rings
+    removed = self.followers.pop(index)
     self.__total_size -= removed.size
     self.adapt_rings()
 

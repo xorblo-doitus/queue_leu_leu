@@ -98,7 +98,7 @@ class TrailFollow:
     self.adapt_trail()
 
   def pop_follower(self, index: int=-1):
-    removed: TrailFollowElement = self.followers.pop(index)
+    removed = self.followers.pop(index)
     self.__total_size -= removed.size
     self.adapt_trail()
 

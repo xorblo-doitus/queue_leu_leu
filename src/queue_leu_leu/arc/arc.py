@@ -1,27 +1,27 @@
 # You can use any other library that includes standard Vector things
 from pygame import Vector2
-from math import pi, asin, cos, sin
+import math
 
-PI2 = 2 * pi
+PI2 = 2 * math.pi
 
 
-def advance_on_circle(radius: float, chord: float, fallback: float = PI2) -> float:
+def advance_on_circle(radius: float, chord: float, fallback: float=PI2) -> float:
   alpha: float = chord / (2*radius)
   if not -1 <= alpha <=1: return fallback
-  return 2 * asin(alpha)
+  return 2 * math.asin(alpha)
 
 def Vector2_polar(magnitude: float, angle_rad: float) -> Vector2:
-  return magnitude * Vector2(cos(angle_rad), sin(angle_rad))
+  return magnitude * Vector2(math.cos(angle_rad), math.sin(angle_rad))
 
 def get_edge_angle(radius: float, distance: float, fallback: float=0) -> float:
   alpha = distance/radius
   if not -1<=alpha<=1: return fallback
-  return asin(alpha)
+  return math.asin(alpha)
 
 
 class ArcFollowRing:
   def __init__(self):
-    self.radius: float = 1
+    self.radius = 1
     self.angles: list[float] = []
 
 
@@ -32,39 +32,39 @@ class ArcFollowElement:
 
 
 class ArcFollow:
-  def __init__(self, spacing: float, gap: float, max_angle_deg: float, leader: ArcFollowElement, strong: bool = False, uniform: bool = True):
+  def __init__(self, spacing: float, gap: float, max_angle_deg: float, leader: ArcFollowElement, strong: bool=False, uniform: bool=True):
     """
     :param spacing: distance between followers
     :param gap: minimum distance between rings
     :param max_angle: max angle each side, at back of the leader
     :param leader: the leader
     """
-    self.leader: ArcFollowElement = leader
+    self.leader = leader
     self.followers: list[ArcFollowElement] = []
     self.rings: list[ArcFollowRing] = []
-    self.spacing: float = spacing
-    self.gap: float = gap
-    self.max_angle_deg: float = max_angle_deg
-    self.rotation: float = 0
-    self.strong: bool = strong
-    self.uniform: bool = uniform
+    self.spacing = spacing
+    self.gap = gap
+    self.max_angle_deg = max_angle_deg
+    self.rotation = 0
+    self.strong = strong
+    self.uniform = uniform
 
   @property
   def max_angle_deg(self) -> float:
     """WARNING: The arc angle is twice this angle"""
-    return self.max_angle / pi * 90
+    return self.max_angle / math.pi * 90
   
   @max_angle_deg.setter
   def max_angle_deg(self, new: float):
-    self.max_angle = new / 90 * pi
+    self.max_angle = new / 90 * math.pi
 
   @property
   def rotation_deg(self) -> float:
-    return self.rotation / pi * 180
+    return math.degrees(self.rotation)
   
   @rotation_deg.setter
   def rotation_deg(self, new: float):
-    self.rotation = new / 180 * pi
+    self.rotation = math.radians(new)
 
   def update_pos(self, new_pos: Vector2):
     """Update the position of the leader"""
@@ -89,39 +89,37 @@ class ArcFollow:
       return
     
     # Caches
-    to_add: list[float] = [f.size for f in self.followers]
-    chords: list[float] = [to_add[i] + self.spacing + to_add[i+1] for i in range(len(to_add)-1)] # at i is stored chord between follower i and i+1.
+    to_add = [f.size for f in self.followers]
+    # at i is stored chord between follower i and i+1.
+    chords = [to_add[i] + self.spacing + to_add[i+1] for i in range(len(to_add)-1)] 
     
-    # Tracking variables
-    ring_i: int = 0
-    total_radius: float = max(1, self.gap + self.leader.size)
-    start_i: int = 0
-    end_i: int = -1
-    
-    # Ring specific variables
-    biggest: float = to_add[0]
-    last_biggest: float = 0
-    angle: float = get_edge_angle(total_radius + biggest, to_add[start_i])
+    ring_i = start_i = last_biggest = 0
+    end_i = -1
+    total_radius = max(1, self.gap + self.leader.size)
+    biggest = to_add[0]
+    angle = get_edge_angle(total_radius + biggest, to_add[start_i])
     
     while end_i < len(to_add) - 1:
       end_i += 1
-      size: float = to_add[end_i]
+      size = to_add[end_i]
+      new_radius = total_radius + biggest
       
       if size > biggest:
         last_biggest = biggest
         biggest = size
+        new_radius = total_radius + biggest
         
         # Recalculate previous angles
-        angle = get_edge_angle(total_radius + biggest, to_add[start_i])
+        angle = get_edge_angle(new_radius, to_add[start_i])
         for i in range(start_i, end_i - 1):
-          angle += advance_on_circle(total_radius + biggest, chords[i])
+          angle += advance_on_circle(new_radius, chords[i])
       
       if end_i - start_i >= 1:
-        angle += advance_on_circle(total_radius + biggest, chords[end_i-1])
+        angle += advance_on_circle(new_radius, chords[end_i-1])
       
       overfits = (
         end_i - start_i > 0
-        and angle + get_edge_angle(total_radius + biggest, to_add[end_i]) > self.max_angle
+        and angle + get_edge_angle(new_radius, to_add[end_i]) > self.max_angle
       )
       
       if overfits or end_i >= len(to_add) - 1:
@@ -131,29 +129,30 @@ class ArcFollow:
           
           if to_add[end_i+1] > size: # Don't use min() it won't work in every case
             biggest = last_biggest
-            angle = advance_on_circle(total_radius + biggest, to_add[start_i])
+            new_radius = total_radius + biggest
+            angle = advance_on_circle(new_radius, to_add[start_i])
             for i in range(start_i, end_i - 1):
-              angle += advance_on_circle(total_radius + biggest, chords[i])
+              angle += advance_on_circle(new_radius, chords[i])
           elif end_i - start_i >= 0:
-            angle -= advance_on_circle(total_radius + biggest, chords[end_i])
+            angle -= advance_on_circle(new_radius, chords[end_i])
         
-        angle += get_edge_angle(total_radius + biggest, to_add[end_i])
+        angle += get_edge_angle(new_radius, to_add[end_i])
         
         # Create the new ring with every selected followers
         ring = self.get_ring(ring_i)
         
         # Choose ring radius
-        if self.strong and start_i == end_i and 2*get_edge_angle(total_radius + biggest, to_add[end_i]) > self.max_angle:
-          ring.radius = biggest / sin(self.max_angle/2) # Non infinity is ensured by the fact that 0 < max_angle < 180
+        if self.strong and start_i == end_i and 2*get_edge_angle(new_radius, to_add[end_i]) > self.max_angle:
+          ring.radius = biggest / math.sin(self.max_angle/2) # Non infinity is ensured by the fact that 0 < max_angle < 180
         else:
-          ring.radius = total_radius + biggest
+          ring.radius = new_radius
         
         # Choose repartition
         if end_i == start_i:
           ring.angles = [self.max_angle/2]
         elif self.uniform:
           extra = (self.max_angle - angle) / (end_i - start_i)
-          ring.angles = [get_edge_angle(total_radius + biggest, to_add[start_i])]
+          ring.angles = [get_edge_angle(new_radius, to_add[start_i])]
           for i in range(start_i, end_i):
             ring.angles.append(ring.angles[-1] + extra + advance_on_circle(ring.radius, chords[i]))
         else:
@@ -183,8 +182,8 @@ class ArcFollow:
     if self.spacing < 0: self.spacing = 0
     if self.gap < 0: self.gap = 0
     # Check rotation
-    if self.rotation > pi: self.rotation -= pi
-    elif self.rotation < -pi: self.rotation += pi
+    if self.rotation > math.pi: self.rotation = -math.pi
+    elif self.rotation < -math.pi: self.rotation = math.pi
 
   def add_follower(self, follower: ArcFollowElement):
     """Add a new follower"""
