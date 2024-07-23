@@ -80,49 +80,45 @@ class OrbitFollow:
     This mode is faster than :py:meth:`adapt_compact`. \n
     WARNING: this method can create overlapping followers.
     """
-    # Caches
-    in_ring = []
+    # Cache
     chords = [self.followers[i].size + self.spacing + self.followers[i+1].size 
               for i in range(len(self.followers)-1)] 
-    
-    ring = angle = 0
+
+    in_ring = ring = angle = 0
     biggest = self.leader.size
     total_radius = self.gap + biggest
     max_i = len(self.followers) - 1
     
     for i, f in enumerate(self.followers):
-      in_ring.append(f.size)
-      size = f.size
-      new_radius = total_radius + biggest
+      in_ring += 1
+      radius = total_radius + biggest
       
-      if size > biggest:
-        biggest = size
-        new_radius = total_radius + biggest
+      if f.size > biggest:
+        biggest = f.size
+        radius = total_radius + biggest
         # Recalculate previous angles
         angle = 0
-        for ii in range(i-len(in_ring)+1, i-1):
-          angle += advance_on_circle(new_radius, chords[ii])
+        for ii in range(i-in_ring+1, i-1):
+          angle += advance_on_circle(radius, chords[ii])
 
-      if len(in_ring) >= 2:
-        # TODO: mmmm why it's not working with chords[i-1] ?
-        angle += advance_on_circle(new_radius, in_ring[-2] + self.spacing + size)
+      if in_ring >= 2:
+        angle += advance_on_circle(radius, chords[i-1])
       
-      total_angle = angle + advance_on_circle(new_radius, size + self.spacing + self.followers[i-len(in_ring)].size)
+      total_angle = angle + advance_on_circle(radius, f.size + self.spacing + self.followers[i-in_ring+1].size)
       
-      if (len(in_ring) > 2 and total_angle > PI2) or i >= max_i:
+      if (in_ring > 2 and total_angle > PI2) or i >= max_i:
         angle = total_angle
         
         r = self.get_ring(ring)
-        r.radius = new_radius
-        step = (PI2 - angle) / len(in_ring)
+        r.radius = radius
+        step = (PI2 - angle) / in_ring
         r.angles = [0]
-        for ii in range(1, len(in_ring)):
-          r.angles.append(r.angles[-1] + step + advance_on_circle(r.radius, in_ring[ii-1] + self.spacing + in_ring[ii]))
+        for ii in range(i-in_ring+1, i):
+          r.angles.append(r.angles[-1] + step + advance_on_circle(r.radius, chords[ii]))
         
         total_radius += self.gap + 2*biggest
         ring += 1
-        angle = biggest = 0
-        in_ring.clear()
+        in_ring = angle = biggest = 0
         
     # Remove empty rings
     self.rings = self.rings[:ring]
