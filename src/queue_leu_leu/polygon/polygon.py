@@ -1,6 +1,6 @@
 # You can use any other library that includes standard Vector things
 from pygame import Vector2
-from math import pi, cos, sin, tan, radians
+from math import pi, cos, sin, radians, sqrt
 
 
 def Vector2_polar(magnitude: float, angle_rad: float) -> Vector2:
@@ -18,6 +18,7 @@ class Polygon:
     
     self._vectors: list[Vector2] = []
     self._growth_vectors: list[Vector2] = []
+    self._incircle_radius: float = 1
     
     self.bake()
   
@@ -34,8 +35,13 @@ class Polygon:
     """
     if len(self.points) >= 2:
       self.points = [point for point, next_ in zip(self.points, self.points[1:] + [self.points[0]]) if point != next_]
+      
     self._bake_vectors()
     self._bake_growth_vectors()
+    self._bake_incircle()
+  
+  def _bake_incircle(self):
+    self._incircle_radius = sqrt(min(map(lambda v: v.length_squared(), self.project_all_clamped(Vector2())))) if self._vectors else 1
   
   def _bake_vectors(self) -> None:
     if len(self.points) >= 2:
@@ -70,6 +76,23 @@ class Polygon:
   
   def project(self, point: Vector2, segment_i: int) -> Vector2:
     return (point - self.points[segment_i]).project(self._vectors[segment_i]) + self.points[segment_i]
+  
+  def project_clamped(self, point: Vector2, segment_i: int) -> Vector2:
+    projection: Vector2 = self.project(point, segment_i)
+    progress: float = self.get_segment_progress(projection, segment_i)
+    
+    if progress >= 1:
+      return self.points[(segment_i+1)%len(self.points)]
+    elif progress <= 0:
+      return self.points[segment_i]
+    
+    return projection
+  
+  def project_all(self, point: Vector2) -> list[Vector2]:
+    return [self.project(point, i) for i in range(len(self._vectors))]
+  
+  def project_all_clamped(self, point: Vector2) -> list[Vector2]:
+    return [self.project_clamped(point, i) for i in range(len(self._vectors))]
   
   def get_segment_progress(self, point: Vector2, segment_i: int) -> float:
     """Assumes point lies on the segment"""
