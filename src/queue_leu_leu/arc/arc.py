@@ -84,13 +84,8 @@ class ArcFollow:
   
   def adapt_rings(self):
     """Update arcs and follower placement"""
-    if not self.followers:
-      self.rings.clear()
-      return
-    
     # Caches
     to_add = [f.size for f in self.followers]
-    # at i is stored chord between follower i and i+1.
     chords = [to_add[i] + self.spacing + to_add[i+1] for i in range(len(to_add)-1)] 
     
     ring_i = start_i = last_biggest = 0
@@ -148,17 +143,9 @@ class ArcFollow:
           ring.radius = new_radius
         
         # Choose repartition
-        if end_i == start_i:
-          ring.angles = [self.max_angle/2]
-        elif self.uniform:
-          extra = (self.max_angle - angle) / (end_i - start_i)
-          ring.angles = [get_edge_angle(new_radius, to_add[start_i])]
-          for i in range(start_i, end_i):
-            ring.angles.append(ring.angles[-1] + extra + advance_on_circle(ring.radius, chords[i]))
-        else:
-          ring.angles = [(self.max_angle - angle) / 2 + advance_on_circle(ring.radius, to_add[start_i])]
-          for i in range(start_i, end_i):
-            ring.angles.append(ring.angles[-1] + advance_on_circle(ring.radius, chords[i]))
+        ring.angles = [(self.max_angle - angle) / 2 + advance_on_circle(ring.radius, to_add[start_i])]
+        for i in range(start_i, end_i):
+          ring.angles.append(ring.angles[-1] + advance_on_circle(ring.radius, chords[i]))
         
         # Progress
         total_radius = ring.radius + biggest + self.gap
