@@ -140,7 +140,6 @@ class PolygonFollowExample(PolygonFollow):
     if new_value == self.editing_polygon:
       return
     self._editing_polygon = new_value
-    self
   
   def draw(self, debug=True) -> None:
     if self._editing_polygon:
@@ -200,6 +199,12 @@ class PolygonFollowExample(PolygonFollow):
     elif keys[pygame.K_e]:
       self.editing_polygon = not self._editing_polygon
       return True
+
+    elif self.editing_polygon:
+      if keys[pygame.K_r]:
+        self.polygon.points = []
+        self.polygon.bake()
+        return True
 
     return False
 
