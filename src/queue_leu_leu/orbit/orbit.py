@@ -80,15 +80,14 @@ class OrbitFollow:
     This mode is faster than :py:meth:`adapt_compact`. \n
     WARNING: this method can create overlapping followers.
     """
-    # Cache
-    chords = [self.followers[i].size + self.spacing + self.followers[i+1].size 
-              for i in range(len(self.followers)-1)] 
-
     in_ring = ring = angle = 0
     biggest = self.leader.size
     total_radius = self.gap + biggest
-    max_i = len(self.followers) - 1
-    
+    max_i = len(self.followers) - 1    
+    # Cache
+    chords = [self.followers[i].size + self.spacing + self.followers[i+1].size 
+              for i in range(max_i)] 
+
     for i, f in enumerate(self.followers):
       in_ring += 1
       radius = total_radius + biggest
@@ -101,20 +100,18 @@ class OrbitFollow:
         for ii in range(i-in_ring+1, i-1):
           angle += advance_on_circle(radius, chords[ii])
 
-      if in_ring >= 2:
-        angle += advance_on_circle(radius, chords[i-1])
+      if in_ring >= 2: angle += advance_on_circle(radius, chords[i-1])
       
       total_angle = angle + advance_on_circle(radius, f.size + self.spacing + self.followers[i-in_ring+1].size)
-      
       if (in_ring > 2 and total_angle > PI2) or i >= max_i:
         angle = total_angle
         
         r = self.get_ring(ring)
         r.radius = radius
-        step = (PI2 - angle) / in_ring
+        extra = (PI2 - angle) / in_ring
         r.angles = [0]
         for ii in range(i-in_ring+1, i):
-          r.angles.append(r.angles[-1] + step + advance_on_circle(r.radius, chords[ii]))
+          r.angles.append(r.angles[-1] + extra + advance_on_circle(r.radius, chords[ii]))
         
         total_radius += self.gap + 2*biggest
         ring += 1
