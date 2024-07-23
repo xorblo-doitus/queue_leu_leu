@@ -51,11 +51,17 @@ class Polygon:
     new_growth_vectors: list[Vector2] = []
     
     for before, after in zip([self._vectors[-1]] + self._vectors, self._vectors):
-      direction: Vector2 = (before.normalize() + after.normalize()).normalize().rotate(-90)
-      new_growth_vectors.append(
-        direction / sin(radians(direction.angle_to(after)))
-      )
-      # new_growth_vectors.append((before.normalize() + after.normalize()).normalize().rotate(-90) / 2 * tan(radians(before.normalize().angle_to(after.normalize()))))
+      mean: Vector2 = before.normalize() + after.normalize()
+      if mean:
+          direction: Vector2 = mean.normalize().rotate(-90)
+          new_growth_vectors.append(
+            direction / sin(radians(direction.angle_to(after)))
+          )
+      else:
+        # It is impossible to have a working growth vector for opposed vectors,
+        # so we fallback on this.
+        new_growth_vectors.append(before.normalize())
+      
     
     self._growth_vectors = new_growth_vectors
   
