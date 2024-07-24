@@ -35,3 +35,4 @@ Mouse Left on nothing  | Add a point after the last point of the polygon
 Mouse Right            | Remove point
 Mouse wheel            | Change current point
 R                      | Reset the polygon
+S                      | Sort points by angle

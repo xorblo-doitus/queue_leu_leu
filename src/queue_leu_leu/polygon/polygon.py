@@ -3,6 +3,10 @@ from pygame import Vector2
 from math import pi, cos, sin, radians, sqrt
 
 
+ANGULAR_REFERENCE = Vector2(1, 0)
+get_absolute_angle_deg = ANGULAR_REFERENCE.angle_to
+
+
 def Vector2_polar(magnitude: float, angle_rad: float) -> Vector2:
   return magnitude * Vector2(cos(angle_rad), sin(angle_rad))
 
@@ -70,6 +74,13 @@ class Polygon:
       
     
     self._growth_vectors = new_growth_vectors
+  
+  def sort_by_angle(self):
+    """
+    In place, Stable, O(n log n)
+    """
+    self.points.sort(key=get_absolute_angle_deg)
+    self.bake()
   
   def growed(self, distance: float) -> "Polygon":
     return Polygon(list(map(lambda point, growth_vector: point + growth_vector * distance, self.points, self._growth_vectors)))

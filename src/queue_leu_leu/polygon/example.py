@@ -117,8 +117,11 @@ class PolygonEditor(PolygonDrawer):
   
   def draw(self, draw_growed: float = 10) -> None:
     super().draw(draw_growed)
-    for point in self.polygon.points:
+    number_offset = pygame.Vector2(1, 1)
+    number_offset.scale_to_length(self._handle_size)
+    for i, point in enumerate(self.polygon.points):
       pygame.draw.circle(window, self.color, self.to_global(point), self._handle_size, 1)
+      window.blit(font.render(str(i), False, 0xffffffff), self.to_global(point) + number_offset)
     
     pygame.draw.circle(window, (80, 0, 0), self.position, self.polygon._incircle_radius, 2)
 
@@ -204,6 +207,9 @@ class PolygonFollowExample(PolygonFollow):
       if keys[pygame.K_r]:
         self.polygon.points = []
         self.polygon.bake()
+        return True
+      elif keys[pygame.K_s]:
+        self.polygon.sort_by_angle()
         return True
 
     return False
