@@ -2,6 +2,7 @@ try: from .polygon import PolygonFollow, PolygonFollower, Polygon
 except ImportError:
   from polygon import PolygonFollow, PolygonFollower, Polygon
 import pygame, random
+from tkinter.simpledialog import askstring
 
 
 def get_closest_point(pos: pygame.Vector2, points: list[pygame.Vector2]|dict[int, pygame.Vector2]) -> tuple[int, float]:
@@ -18,12 +19,12 @@ def get_closest_point(pos: pygame.Vector2, points: list[pygame.Vector2]|dict[int
 
 
 class PolygonDrawer():
-  def __init__(self, polygon: Polygon, position: pygame.Vector2 = pygame.Vector2(0, 0), color: pygame.Vector3 = pygame.Vector3(255, 0, 255)) -> None:
+  def __init__(self, polygon: Polygon, position: pygame.Vector2 = pygame.Vector2(0, 0), color: pygame.Vector3 = pygame.Vector3(255, 255, 0)) -> None:
     self.polygon: Polygon = polygon
     self.position: pygame.Vector2 = position
     self.color: pygame.Vector3 = color
   
-  def draw(self, draw_growed: float = 10) -> None:
+  def draw(self, debug: bool = False) -> None:
     global_points: list[pygame.Vector2] = list(map(self.to_global, self.polygon.points))
     
     pygame.draw.circle(window, (255, 255, 255), self.position, 5)
@@ -43,12 +44,9 @@ class PolygonDrawer():
     # for start, direction in zip(global_points, self.polygon._vectors):
     #   pygame.draw.line(window, (0, 0, 255), start, start + direction)
     
-    if not draw_growed:
+    if debug:
       for start, vector in zip(global_points, self.polygon._growth_vectors):
         pygame.draw.line(window, (255, 0, 0), start, start + vector * 10)
-    
-    if draw_growed:
-      PolygonDrawer(self.polygon.growed(draw_growed), self.position, self.color * 0.5).draw(0)
   
   def to_local(self, position: pygame.Vector2) -> pygame.Vector2:
     return position - self.position
@@ -62,6 +60,7 @@ class PolygonEditor(PolygonDrawer):
     super().__init__(polygon, position)
     self._handle_size: float = 10
     self._handle_size_squared: float = self._handle_size**2
+    self._growth_previews: list[tuple[bool, int]] = [10, 20, 40, 70, 110]
     self.dragging_i: int = -1
   
   @property
@@ -71,6 +70,15 @@ class PolygonEditor(PolygonDrawer):
   def handle_size(self, new_value: float):
     self._handle_size = new_value
     self._handle_size_squared = new_value**2
+  
+  def update_growth_preview(self, input: str):
+    self._growth_previews = []
+    for part in input.split(","):
+      part = part.strip()
+      if part.startswith("="):
+        self._growth_previews.append(int(part.removeprefix("=").strip()))
+      else:
+        self._growth_previews.append(int(part) + (self._growth_previews[-1] if self._growth_previews else 0))
   
   def handle_mouse_down(self, event) -> None:
     local_pos: pygame.Vector2 = self.to_local(event.pos)
@@ -115,15 +123,18 @@ class PolygonEditor(PolygonDrawer):
     self.polygon.points[self.dragging_i] += event.rel
     self.polygon.bake()
   
-  def draw(self, draw_growed: float = 10) -> None:
-    super().draw(draw_growed)
+  def draw(self) -> None:
+    super().draw(True)
     number_offset = pygame.Vector2(1, 1)
     number_offset.scale_to_length(self._handle_size)
     for i, point in enumerate(self.polygon.points):
-      pygame.draw.circle(window, self.color, self.to_global(point), self._handle_size, 1)
+      pygame.draw.circle(window, (255, 0, 255), self.to_global(point), self._handle_size, 3)
       window.blit(font.render(str(i), False, 0xffffffff), self.to_global(point) + number_offset)
     
     pygame.draw.circle(window, (80, 0, 0), self.position, self.polygon._incircle_radius, 2)
+    
+    for growth in self._growth_previews:
+      PolygonDrawer(self.polygon.growed(growth), self.position, self.color * 0.5).draw()
 
 
 class PolygonFollowExample(PolygonFollow):
@@ -210,6 +221,15 @@ class PolygonFollowExample(PolygonFollow):
         return True
       elif keys[pygame.K_s]:
         self.polygon.sort_by_angle()
+        return True
+      elif keys[pygame.K_g]:
+        self._polygon_editor.update_growth_preview(
+          askstring(
+            "Configurate",
+            "New growth previews:\t\t\t\t\t\t",
+            initialvalue=", =".join(map(str, self._polygon_editor._growth_previews)),
+          )
+        )
         return True
 
     return False
