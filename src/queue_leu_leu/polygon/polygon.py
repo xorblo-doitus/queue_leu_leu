@@ -126,7 +126,7 @@ class PolygonFollow:
     """
     self.leader: PolygonFollower = leader
     self.followers: list[PolygonFollower] = []
-    self.polygons: list[Polygon] = []
+    self.relative_positions: list[Vector2] = []
     self.spacing: float = spacing
     self.gap: float = gap
     self.polygon: Polygon = polygon
@@ -146,8 +146,8 @@ class PolygonFollow:
     
     self.leader.pos = new_pos
     
-    # Update followers
-    pass
+    for follower, relative_pos in zip(self.followers, self.relative_positions):
+      follower.pos = new_pos + relative_pos
   
   def adapt(self):
     """
