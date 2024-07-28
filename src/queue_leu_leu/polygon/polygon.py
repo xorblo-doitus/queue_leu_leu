@@ -110,6 +110,10 @@ class Polygon:
     relative_to_start: Vector2 = point - self.points[segment_i]
     return relative_to_start.x / self._vectors[segment_i].x if self._vectors[segment_i].x else relative_to_start.y / self._vectors[segment_i].y
 
+  def __mul__(self, other: float) -> "Polygon":
+    return Polygon([point * other for point in self.points])
+
+
 class PolygonFollower:
   def __init__(self, pos: Vector2, size: float):
     self.pos = pos
