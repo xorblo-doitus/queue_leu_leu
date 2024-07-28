@@ -2,10 +2,11 @@ try: from .polygon import PolygonFollow, PolygonFollower, Polygon
 except ImportError:
   from polygon import PolygonFollow, PolygonFollower, Polygon
 import pygame, random
+from pygame import Vector2
 from tkinter.simpledialog import askstring
 
 
-def get_closest_point(pos: pygame.Vector2, points: list[pygame.Vector2]|dict[int, pygame.Vector2]) -> tuple[int, float]:
+def get_closest_point(pos: Vector2, points: list[Vector2]|dict[int, Vector2]) -> tuple[int, float]:
   """Returns (index, distance_squared)"""
   closest_i: int = 0
   closest_distance_squared: float = points[closest_i].distance_squared_to(pos) if isinstance(points, list) else float("inf")
@@ -19,18 +20,18 @@ def get_closest_point(pos: pygame.Vector2, points: list[pygame.Vector2]|dict[int
 
 
 class PolygonDrawer():
-  def __init__(self, polygon: Polygon, position: pygame.Vector2 = pygame.Vector2(0, 0), color: pygame.Vector3 = pygame.Vector3(255, 255, 0)) -> None:
+  def __init__(self, polygon: Polygon, position: Vector2 = Vector2(0, 0), color: pygame.Vector3 = pygame.Vector3(255, 255, 0)) -> None:
     self.polygon: Polygon = polygon
-    self.position: pygame.Vector2 = position
+    self.position: Vector2 = position
     self.color: pygame.Vector3 = color
   
   def draw(self, debug: bool = False) -> None:
-    global_points: list[pygame.Vector2] = list(map(self.to_global, self.polygon.points))
+    global_points: list[Vector2] = list(map(self.to_global, self.polygon.points))
     
     pygame.draw.circle(window, (255, 255, 255), self.position, 5)
     
     # if draw_growed:
-    #   mp: pygame.Vector2 = self.to_local(pygame.mouse.get_pos())
+    #   mp: Vector2 = self.to_local(pygame.mouse.get_pos())
     #   for i in range(len(self.polygon._vectors)):
     #     # if point != mp:
     #     pygame.draw.circle(window, (255, 255, 100), self.to_global(self.polygon.project(mp, i)), 3)
@@ -48,15 +49,15 @@ class PolygonDrawer():
       for start, vector in zip(global_points, self.polygon._growth_vectors):
         pygame.draw.line(window, (255, 0, 0), start, start + vector * 10)
   
-  def to_local(self, position: pygame.Vector2) -> pygame.Vector2:
+  def to_local(self, position: Vector2) -> Vector2:
     return position - self.position
   
-  def to_global(self, position: pygame.Vector2) -> pygame.Vector2:
+  def to_global(self, position: Vector2) -> Vector2:
     return self.position + position
 
 
 class PolygonEditor(PolygonDrawer):
-  def __init__(self, polygon: Polygon, position: pygame.Vector2 = pygame.Vector2(0, 0)) -> None:
+  def __init__(self, polygon: Polygon, position: Vector2 = Vector2(0, 0)) -> None:
     super().__init__(polygon, position)
     self._handle_size: float = 10
     self._handle_size_squared: float = self._handle_size**2
@@ -81,7 +82,7 @@ class PolygonEditor(PolygonDrawer):
         self._growth_previews.append(int(part) + (self._growth_previews[-1] if self._growth_previews else 0))
   
   def handle_mouse_down(self, event) -> None:
-    local_pos: pygame.Vector2 = self.to_local(event.pos)
+    local_pos: Vector2 = self.to_local(event.pos)
     if event.button == pygame.BUTTON_LEFT:
       if self.polygon.points:
         point_i, distance_squared = get_closest_point(local_pos, self.polygon.points)
@@ -90,7 +91,7 @@ class PolygonEditor(PolygonDrawer):
           return
         
         if self.polygon._vectors:
-          projections: dict[int, pygame.Vector2] = {
+          projections: dict[int, Vector2] = {
             i: projection
             for i, projection in enumerate(self.polygon.project_all(local_pos))
             if 0 < self.polygon.get_segment_progress(projection, i) < 1
@@ -117,7 +118,7 @@ class PolygonEditor(PolygonDrawer):
     if self.dragging_i == -1:
       return
     
-    new_pos: pygame.Vector2 = self.polygon.points[self.dragging_i] + event.rel
+    new_pos: Vector2 = self.polygon.points[self.dragging_i] + event.rel
     if self.polygon.points[self.dragging_i - 1] == new_pos or self.polygon.points[(self.dragging_i + 1)%len(self.polygon.points)] == new_pos:
       return
     self.polygon.points[self.dragging_i] += event.rel
@@ -125,7 +126,7 @@ class PolygonEditor(PolygonDrawer):
   
   def draw(self) -> None:
     super().draw(True)
-    number_offset = pygame.Vector2(1, 1)
+    number_offset = Vector2(1, 1)
     number_offset.scale_to_length(self._handle_size)
     for i, point in enumerate(self.polygon.points):
       pygame.draw.circle(window, (255, 0, 255), self.to_global(point), self._handle_size, 3)
@@ -143,7 +144,7 @@ class PolygonFollowExample(PolygonFollow):
     super().__init__(spacing, gap, polygon, leader)
     
     self._editing_polygon: bool = False
-    self._polygon_editor: PolygonEditor = PolygonEditor(polygon, pygame.Vector2(window.get_width(), window.get_height()) / 2)
+    self._polygon_editor: PolygonEditor = PolygonEditor(polygon, Vector2(window.get_width(), window.get_height()) / 2)
   
   @property
   def editing_polygon(self) -> bool:
@@ -181,7 +182,7 @@ class PolygonFollowExample(PolygonFollow):
 
   def handle_keyboard(self, keys) -> bool:
     if keys[pygame.K_RETURN]:
-      poly.add_follower(PolygonFollower(pygame.Vector2(100, 100), random.randint(6, 60)))
+      poly.add_follower(PolygonFollower(Vector2(100, 100), random.randint(6, 60)))
       return True
 
     elif keys[pygame.K_BACKSPACE]:
@@ -255,7 +256,14 @@ window = pygame.display.set_mode((500, 500), pygame.RESIZABLE)
 clock = pygame.time.Clock()
 font = pygame.font.SysFont('Consolas', 16)
 
-poly = PolygonFollowExample(16, 24, Polygon(), PolygonFollower(pygame.Vector2(100, 100), 5))
+square = Polygon([
+  Vector2(-1, -1),
+  Vector2(1, -1),
+  Vector2(1, 1),
+  Vector2(-1, 1),
+]) * 20.0
+
+poly = PolygonFollowExample(16, 24, square, PolygonFollower(Vector2(100, 100), 5))
 run = True
 while run:
     clock.tick(60)
@@ -271,12 +279,12 @@ while run:
         elif event.type == pygame.MOUSEMOTION:
           poly.handle_mouse_motion(event)
         elif event.type == pygame.VIDEORESIZE:
-          poly._polygon_editor.position = pygame.Vector2(event.w, event.h) / 2
+          poly._polygon_editor.position = Vector2(event.w, event.h) / 2
 
     if poly.handle_keyboard(pygame.key.get_pressed()):
       pygame.time.delay(100)
 
-    poly.update_pos(pygame.Vector2(pygame.mouse.get_pos()))
+    poly.update_pos(Vector2(pygame.mouse.get_pos()))
     window.fill(0)
     poly.draw()
     pygame.display.flip()
