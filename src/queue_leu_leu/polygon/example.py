@@ -194,60 +194,65 @@ class PolygonFollowExample(PolygonFollow):
     pygame.draw.circle(window, (255, 0, 0), position, self.leader.size)
 
   def handle_keyboard(self, keys) -> bool:
-    if keys[pygame.K_RETURN]:
-      poly.add_follower(PolygonFollower(Vector2(100, 100), random.randint(6, 60)))
-      return True
-
-    elif keys[pygame.K_BACKSPACE]:
-      if poly.followers:
-        poly.pop_follower(random.randint(0, len(poly.followers)-1))
-      return True
-
-    elif keys[pygame.K_RSHIFT]:
-      for f in poly.followers:
-        f.size = random.randint(6, 60)
-      return True
-
-    elif keys[pygame.K_EQUALS]:
-      poly.spacing += 1
-      return True
-
-    elif keys[pygame.K_6]:
-      poly.spacing -= 1
-      return True
-
-    elif keys[pygame.K_UP]:
-      poly.gap += 1
-      return True
-
-    elif keys[pygame.K_DOWN]:
-      poly.gap -= 1
-      return True
-
-    elif keys[pygame.K_e]:
-      self.editing_polygon = not self._editing_polygon
-      return True
-
-    elif self.editing_polygon:
-      if keys[pygame.K_r]:
-        self.polygon.points = []
-        self.polygon.bake()
+    if self._editing_polygon:
+      return self.handle_keyboard_editing(keys)
+    else:
+      if keys[pygame.K_RETURN]:
+        poly.add_follower(PolygonFollower(Vector2(100, 100), random.randint(6, 60)))
         return True
-      elif keys[pygame.K_s]:
-        self.polygon.sort_by_angle()
+
+      elif keys[pygame.K_BACKSPACE]:
+        if poly.followers:
+          poly.pop_follower(random.randint(0, len(poly.followers)-1))
         return True
-      elif keys[pygame.K_g]:
-        self._polygon_editor.update_growth_preview(
-          askstring(
-            "Configurate",
-            "New growth previews:\t\t\t\t\t\t",
-            initialvalue=", =".join(map(str, self._polygon_editor._growth_previews)),
-          )
-        )
+
+      elif keys[pygame.K_RSHIFT]:
+        for f in poly.followers:
+          f.size = random.randint(6, 60)
+        return True
+
+      elif keys[pygame.K_EQUALS]:
+        poly.spacing += 1
+        return True
+
+      elif keys[pygame.K_6]:
+        poly.spacing -= 1
+        return True
+
+      elif keys[pygame.K_UP]:
+        poly.gap += 1
+        return True
+
+      elif keys[pygame.K_DOWN]:
+        poly.gap -= 1
+        return True
+
+      elif keys[pygame.K_e]:
+        self.editing_polygon = not self._editing_polygon
         return True
 
     return False
-
+  
+  def handle_keyboard_editing(self, keys) -> bool:
+    if keys[pygame.K_r]:
+        self.polygon.points = []
+        self.polygon.bake()
+        return True
+    elif keys[pygame.K_s]:
+      self.polygon.sort_by_angle()
+      return True
+    elif keys[pygame.K_g]:
+      self._polygon_editor.update_growth_preview(
+        askstring(
+          "Configurate",
+          "New growth previews:\t\t\t\t\t\t",
+          initialvalue=", =".join(map(str, self._polygon_editor._growth_previews)),
+        )
+      )
+      return True
+    
+    return False
+  
   def handle_mouse_motion(self, event) -> None:
     if self._editing_polygon:
       self._polygon_editor.handle_mouse_motion(event)
