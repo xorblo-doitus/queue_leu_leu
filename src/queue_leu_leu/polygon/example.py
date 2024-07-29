@@ -145,6 +145,7 @@ class PolygonFollowExample(PolygonFollow):
     
     self._editing_polygon: bool = False
     self._polygon_editor: PolygonEditor = PolygonEditor(polygon, Vector2(window.get_width(), window.get_height()) / 2)
+    self._polygon_drawers: list[PolygonDrawer] = []
   
   @property
   def editing_polygon(self) -> bool:
@@ -156,11 +157,19 @@ class PolygonFollowExample(PolygonFollow):
       return
     self._editing_polygon = new_value
   
+  def adapt(self):
+    super().adapt()
+    self._polygon_drawers = [
+      PolygonDrawer(polygon, self.leader.pos, 0xffff00 if i%3==1 else 0x995500)
+      for i, polygon in enumerate(self._debug_polygons)
+    ]
+  
   def draw(self, debug=True) -> None:
     if self._editing_polygon:
       self._polygon_editor.draw()
       return
     
+    position = self.leader.pos
     fsize = len(self.followers)
 
     if debug:
@@ -172,13 +181,17 @@ class PolygonFollowExample(PolygonFollow):
       )
       for i, t in enumerate(things):
         window.blit(font.render(t, False, 0xffffffff), (10, 10+20*i))
+      
+      for drawer in self._polygon_drawers:
+        drawer.position = position
+        drawer.draw()
     
     for i, f in enumerate(self.followers):
       pygame.draw.circle(window, (0, 255*i/fsize, 255), f.pos, f.size)
       if debug:
         pygame.draw.circle(window, (255, 0, 0), f.pos, 3)
     
-    pygame.draw.circle(window, (255, 0, 0), self.leader.pos, self.leader.size)
+    pygame.draw.circle(window, (255, 0, 0), position, self.leader.size)
 
   def handle_keyboard(self, keys) -> bool:
     if keys[pygame.K_RETURN]:

@@ -135,6 +135,8 @@ class PolygonFollow:
     self.gap: float = gap
     self.polygon: Polygon = polygon
     self.rotation: float = 0
+    
+    self._debug_polygons: list[Polygon] = []
 
   @property
   def rotation_deg(self) -> float:
