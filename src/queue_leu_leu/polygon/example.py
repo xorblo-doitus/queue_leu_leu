@@ -194,38 +194,42 @@ class PolygonFollowExample(PolygonFollow):
     pygame.draw.circle(window, (255, 0, 0), position, self.leader.size)
 
   def handle_keyboard(self, keys) -> bool:
+    if keys[pygame.K_e]:
+      self.editing_polygon = not self._editing_polygon
+      return True
+    
     if self._editing_polygon:
       return self.handle_keyboard_editing(keys)
-    else:
-      if keys[pygame.K_RETURN]:
-        poly.add_follower(PolygonFollower(Vector2(100, 100), random.randint(6, 60)))
-        return True
+    
+    if keys[pygame.K_RETURN]:
+      poly.add_follower(PolygonFollower(Vector2(100, 100), random.randint(6, 60)))
+      return True
 
-      elif keys[pygame.K_BACKSPACE]:
-        if poly.followers:
-          poly.pop_follower(random.randint(0, len(poly.followers)-1))
-        return True
+    elif keys[pygame.K_BACKSPACE]:
+      if poly.followers:
+        poly.pop_follower(random.randint(0, len(poly.followers)-1))
+      return True
 
-      elif keys[pygame.K_RSHIFT]:
-        for f in poly.followers:
-          f.size = random.randint(6, 60)
-        return True
+    elif keys[pygame.K_RSHIFT]:
+      for f in poly.followers:
+        f.size = random.randint(6, 60)
+      return True
 
-      elif keys[pygame.K_EQUALS]:
-        poly.spacing += 1
-        return True
+    elif keys[pygame.K_EQUALS]:
+      poly.spacing += 1
+      return True
 
-      elif keys[pygame.K_6]:
-        poly.spacing -= 1
-        return True
+    elif keys[pygame.K_6]:
+      poly.spacing -= 1
+      return True
 
-      elif keys[pygame.K_UP]:
-        poly.gap += 1
-        return True
+    elif keys[pygame.K_UP]:
+      poly.gap += 1
+      return True
 
-      elif keys[pygame.K_DOWN]:
-        poly.gap -= 1
-        return True
+    elif keys[pygame.K_DOWN]:
+      poly.gap -= 1
+      return True
 
       elif keys[pygame.K_e]:
         self.editing_polygon = not self._editing_polygon
