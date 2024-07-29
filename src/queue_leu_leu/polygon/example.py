@@ -146,6 +146,7 @@ class PolygonFollowExample(PolygonFollow):
     self._editing_polygon: bool = False
     self._polygon_editor: PolygonEditor = PolygonEditor(polygon, Vector2(window.get_width(), window.get_height()) / 2)
     self._polygon_drawers: list[PolygonDrawer] = []
+    self._draw_chord_circles: bool = True
   
   @property
   def editing_polygon(self) -> bool:
@@ -191,6 +192,15 @@ class PolygonFollowExample(PolygonFollow):
       if debug:
         pygame.draw.circle(window, (255, 0, 0), f.pos, 3)
     
+    if self._draw_chord_circles:
+      for follower, next_ in zip(self.followers, self.followers[1:]):
+        pygame.draw.circle(
+          window,
+          (0, 150, 50),
+          follower.pos, follower.size + next_.size + self.spacing,
+          width=1
+        )
+    
     pygame.draw.circle(window, (255, 0, 0), position, self.leader.size)
 
   def handle_keyboard(self, keys) -> bool:
@@ -230,10 +240,10 @@ class PolygonFollowExample(PolygonFollow):
     elif keys[pygame.K_DOWN]:
       poly.gap -= 1
       return True
-
-      elif keys[pygame.K_e]:
-        self.editing_polygon = not self._editing_polygon
-        return True
+    
+    elif keys[pygame.K_c]:
+      self._draw_chord_circles = not self._draw_chord_circles
+      return True
 
     return False
   
