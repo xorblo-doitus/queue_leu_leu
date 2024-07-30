@@ -74,6 +74,10 @@ class PolygonEditor(PolygonDrawer):
   
   def update_growth_preview(self, input: str):
     self._growth_previews = []
+    
+    if not input:
+      return
+    
     for part in input.split(","):
       part = part.strip()
       if part.startswith("="):
