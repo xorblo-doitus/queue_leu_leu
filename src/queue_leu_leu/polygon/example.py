@@ -250,6 +250,29 @@ class PolygonFollowExample(PolygonFollow):
     elif keys[pygame.K_c]:
       self._draw_chord_circles = not self._draw_chord_circles
       return True
+    
+    elif keys[pygame.K_s]:
+      result: str = askstring(
+        "Configurate",
+        "New sizes:\t\t\t\t\t\t",
+        initialvalue=", ".join(map(lambda f: str(f.size), self.followers)),
+      )
+      
+      results = [
+        int(float(part.strip()))
+        for part in result.split(",")
+      ] if result else []
+      
+      # Create the right amount of followers
+      for _ in range(len(results) - len(self.followers)):
+        self.followers.append(PolygonFollower(Vector2(), Vector2()))
+      for _ in range(len(self.followers), len(results)):
+        self.followers.pop()
+      
+      for f, size in zip(self.followers, results):
+        f.size = size
+      
+      return True
 
     return False
   
