@@ -183,14 +183,16 @@ class PolygonFollowExample(PolygonFollow):
       for i, t in enumerate(things):
         window.blit(font.render(t, False, 0xffffffff), (10, 10+20*i))
       
-      for drawer in self._polygon_drawers:
-        drawer.position = position
-        drawer.draw()
     
     for i, f in enumerate(self.followers):
       pygame.draw.circle(window, (0, 255*i/fsize, 255), f.pos, f.size)
       if debug:
         pygame.draw.circle(window, (255, 0, 0), f.pos, 3)
+    
+    if debug:
+      for drawer in self._polygon_drawers:
+        drawer.position = position
+        drawer.draw()
     
     if self._draw_chord_circles:
       for follower, next_ in zip(self.followers, self.followers[1:]):
