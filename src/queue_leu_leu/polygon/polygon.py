@@ -1,10 +1,39 @@
 # You can use any other library that includes standard Vector things
 from pygame import Vector2
-from math import pi, cos, sin, radians, sqrt
-
+from math import pi, cos, sin, asin, radians, sqrt
+from typing import Generator
 
 ANGULAR_REFERENCE = Vector2(1, 0)
 get_absolute_angle_deg = ANGULAR_REFERENCE.angle_to
+
+
+def scale_to_length(vector: Vector2, scale: float) -> Vector2:
+  """QOL because the native method is in place"""
+  new = Vector2(vector)
+  new.scale_to_length(scale)
+  return new
+
+
+# def intersect(p1: Vector2, p2: Vector2, d1: Vector2, d2: Vector2) -> Vector2|None:
+#   """
+#   WARNING: Computes intersection for infinite lines.
+#   WARNING: Return None if lines are parallel
+#   Python application of this formula :
+#   https://en.wikipedia.org/w/index.php?title=Line%E2%80%93line_intersection&oldid=1229564037#Given_two_points_on_each_line
+#   """
+#   x1, y1, x2, y2, x3, y3, x4, y4 = *p1, *p2, *d1, *d2
+#   denominator = ((x1-x2)*(y3-y4) - (y1-y2)*(x3-x4))
+  
+#   if denominator == 0:
+#     return None
+  
+#   cache_a = (x1*y2 - y1*x2)
+#   cache_b = (x3*y4 - y3*x4)
+  
+#   return Vector2(
+#     (cache_a*(x3-x4) - (x1-x2)*cache_b) / denominator,
+#     (cache_a*(y3-y4) - (y1-y2)*cache_b) / denominator
+#   )
 
 
 def Vector2_polar(magnitude: float, angle_rad: float) -> Vector2:
@@ -110,14 +139,126 @@ class Polygon:
     relative_to_start: Vector2 = point - self.points[segment_i]
     return relative_to_start.x / self._vectors[segment_i].x if self._vectors[segment_i].x else relative_to_start.y / self._vectors[segment_i].y
 
+
+# class PolygonWalker():
+#   def __init__(self, polygon: Polygon) -> None:
+#     self._polygon: Polygon = polygon
+#     self._segment_i: int = 0
+#     self._segment_progress: float = 0
+    
+#     self._segment_length: float = self._polygon._vectors[self._segment_i].length()
+  
+#   def progress(self, distance: float) -> Vector2:
+#     if self._segment_progress + distance <= self._segment_length:
+#       self._segment_progress += distance
+#       if self._segment_progress == self._segment_length:
+#         self._segment_i += 1
+
+
+  def walk(self) -> Generator[Vector2, float, None]:
+    segment_i: int = 0
+    segment: Vector2 = self._vectors[segment_i]
+    segment_progress: float = 0
+    segment_length: float = segment.length()
+    last_pos: Vector2 = self.points[0]
+    wanted_progress: float = yield last_pos
+    
+    while True:
+      if segment_progress + wanted_progress <= segment_length:
+          segment_progress += wanted_progress
+          if segment_progress == segment_length:
+            segment_i += 1
+            if segment_i >= len(self._vectors):
+              yield None
+              return
+            segment = self._vectors[segment_i]
+            segment_length = segment.length()
+            segment_progress = 0
+            last_pos = self.points[segment_i]
+          else:
+            last_pos = self.points[segment_i] + scale_to_length(segment, segment_progress)
+      else:
+        new_segment_i: int = segment_i + 1
+        # available_progress: float = segment.length() - segment_progress
+        result: None|Vector2 = None
+        while new_segment_i < len(self._vectors):
+          angle_to_next: float = radians(self._vectors[new_segment_i].angle_to(segment))
+          if abs(angle_to_next%pi) <= 1e-6:
+            extend_from = self.project(last_pos, new_segment_i)
+            extend_by = wanted_progress * cos(asin((extend_from - last_pos).length()/wanted_progress))
+            displacement = scale_to_length(segment, extend_by)
+            attempts: list[tuple[Vector2, float]] = list(map(
+              lambda attempt: (attempt, self.get_segment_progress(attempt, new_segment_i)),
+              [
+                extend_from + displacement,
+                extend_from - displacement
+              ]
+            ))
+            attempts.sort(key=lambda attempt: attempt[1])
+            for attempt in attempts:
+              if 0 <= attempt[1] <= 1:
+                result = attempt[0]
+                segment_progress = (result - self.points[new_segment_i]).length()
+                break
+          else:
+            # progress_to_intersection: float = (
+            #   available_progress
+            #   if segment_i + 1 == new_segment_i else
+            #   (intersect(
+            #     self.points[segment_i],
+            #     self.points[segment_i+1],
+            #     self.points[new_segment_i],
+            #     self.points[(new_segment_i+1)%len(self.points)]
+            #   ) - self.points[segment_i] + scale_to_length(segment, segment_progress)).length()
+            # )
+            to_start: Vector2 = self.points[new_segment_i] - last_pos
+            angle_last_start_new: float = abs(pi - radians(abs(to_start.angle_to(self._vectors[new_segment_i]))))
+            distance_last_start = to_start.length()
+            sin_next: float = distance_last_start * sin(angle_last_start_new) / wanted_progress
+            angle_deviation: float = angle_last_start_new + asin(sin_next)
+            # if angle_deviation <= 0:
+            #   print("fixed")
+            #   angle_deviation = pi - angle_last_start_new - asin(sin_next)
+            # print(angle_last_start_new + abs(asin(sin_next)), "vs", pi - angle_last_start_new - abs(asin(sin_next)))
+            # angle_deviation: float =  angle_last_start_new + abs(asin(sin_next))
+            # angle_deviation: float = pi - angle_last_start_new - abs(asin(sin_next))
+            new_progress: float = distance_last_start * sin(angle_deviation) / sin_next
+            attempt: Vector2 = self.points[new_segment_i] + scale_to_length(self._vectors[new_segment_i], new_progress)
+            if 0 <= self.get_segment_progress(attempt, new_segment_i) <= 1:
+              result = attempt
+              segment_progress = new_progress
+          
+          if result is not None: # Warning: Do not check falsy as Vector can be (0, 0)
+            segment_i = new_segment_i
+            segment = self._vectors[segment_i]
+            segment_length = segment.length()
+            last_pos = result
+            break
+          
+          new_segment_i += 1
+        else:
+          yield None
+          return
+      
+      wanted_progress: float = yield last_pos
+  
+  def bulk_walk(self, distances) -> tuple[Generator[Vector2, float, None], list[Vector2|None]]:
+    walker: Generator[Vector2, float, None] = self.walk()
+    result: list[Vector2] = [next(walker)]
+    for distance in distances:
+      result.append(walker.send(distance))
+      if result[-1] is None: # DO NOT check falsy (Vector2(0, 0) conflict)
+        break
+    return walker, result
+  
   def __mul__(self, other: float) -> "Polygon":
     return Polygon([point * other for point in self.points])
 
 
 class PolygonFollower:
   def __init__(self, pos: Vector2, size: float):
-    self.pos = pos
-    self.size = size
+    self.pos: Vector2 = pos
+    self.size: float = size
 
 
 class PolygonFollow:
@@ -157,9 +298,86 @@ class PolygonFollow:
   
   def adapt(self):
     """
-    Update polygons and follower placement
+    Update follower placement
     """
-    pass
+    # return
+    self.relative_positions.clear()
+    self._debug_polygons.clear()
+    
+    if not self.followers:
+      return
+    
+    # Caches
+    to_add: list[float] = [f.size for f in self.followers]
+    chords: list[float] = [to_add[i] + self.spacing + to_add[i+1] for i in range(len(to_add)-1)] 
+    
+    # Tracking variables
+    total_growth: float = self.leader.size + self.gap
+    start_i: int = 0
+    end_i: int = -1
+    
+    # Polygon specific variables
+    biggest: float = to_add[0]
+    last_biggest: float = 0
+    polygon: Polygon = self.polygon.growed(total_growth + biggest)
+    walker: Generator[Vector2, float, None] = polygon.walk()
+    positions: list[Vector2] = [next(walker)]
+    last_positions: list[Vector2] = []
+    
+    while end_i < len(to_add) - 1:
+      end_i += 1
+      size: float = to_add[end_i]
+      overfits = False
+      
+      if size > biggest:
+        last_biggest = biggest
+        last_positions = positions
+        biggest = size
+        polygon = self.polygon.growed(total_growth + biggest)
+        walker, positions = polygon.bulk_walk(chords[start_i:end_i-1])
+        # Depending on the polygon, a grown version can fit less of the same followers
+        if positions[-1] is None:
+          overfits = "growth"
+      
+      if not overfits and end_i - start_i >= 1:
+        positions.append(walker.send(chords[end_i-1]))
+      
+      overfits = (
+        overfits
+        or end_i - start_i > 0
+        and positions[-1] is None
+      )
+      
+      if overfits or end_i >= len(to_add) - 1:
+        if overfits:
+          end_i -= 1
+          if overfits == "growth":
+            biggest = last_biggest
+            positions = last_positions
+            polygon = self.polygon.growed(total_growth + biggest)
+          else:
+            positions.pop()
+          
+        
+        self.relative_positions += positions
+        
+        # Progress
+        self._debug_polygons += [
+          self.polygon.growed(total_growth),
+          polygon,
+          self.polygon.growed(total_growth + 2*biggest),
+        ]
+        total_growth += 2*biggest + self.gap
+        
+        # Clean up variables
+        start_i = end_i + 1
+        if start_i < len(to_add):
+          biggest = to_add[start_i]
+          last_biggest = 0
+          polygon = self.polygon.growed(total_growth + biggest)
+          walker = self.polygon.growed(total_growth + biggest).walk()
+          positions = [next(walker)]
+          last_positions = []
   
 
   def add_follower(self, follower: PolygonFollower):
