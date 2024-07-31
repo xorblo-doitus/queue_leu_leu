@@ -25,6 +25,8 @@ Minus       | Decrease the spacing between followers
 Mouse wheel | Change the rotation of the leader
 Up arrow    | Increase the gap between polygons
 Down arrow  | Decrease the gap between polygons
+S           | Configure sizes of followers
+C           | Toggle chord circles drawing (help for debugging)
 
 ## While editing polygon
 Button                 | Action
@@ -36,3 +38,4 @@ Mouse Right            | Remove point
 Mouse wheel            | Change current point
 R                      | Reset the polygon
 S                      | Sort points by angle
+G                      | Configure growth previews
