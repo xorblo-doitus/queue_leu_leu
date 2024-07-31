@@ -326,6 +326,7 @@ square = Polygon([
 
 poly = PolygonFollowExample(16, 24, square, PolygonFollower(Vector2(100, 100), 5))
 run = True
+key_debounce: int = 0
 while run:
     clock.tick(60)
     for event in pygame.event.get():
@@ -341,9 +342,20 @@ while run:
           poly.handle_mouse_motion(event)
         elif event.type == pygame.VIDEORESIZE:
           poly._polygon_editor.position = Vector2(event.w, event.h) / 2
-
-    if poly.handle_keyboard(pygame.key.get_pressed()):
-      pygame.time.delay(100)
+    
+    if key_debounce <= 0:
+      keys = pygame.key.get_pressed()
+      
+      key_pressed = poly.handle_keyboard(keys)
+      
+      if key_pressed:
+        key_debounce = 1 if key_debounce == 0 else 12
+    elif not any(pygame.key.get_pressed()):
+      key_debounce = -1
+    
+    if key_debounce > -1:
+      key_debounce -= 1
+    
 
     poly.update_pos(Vector2(pygame.mouse.get_pos()))
     window.fill(0)
