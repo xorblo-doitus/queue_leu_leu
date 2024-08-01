@@ -12,6 +12,7 @@ Just run the script [example.py](example.py) or use the command: ``python -m que
 Button      | Action
 ------------|:-------
 E           | Toggle polygon editor
+L           | Open polygon library
 
 ## While following
 Button      | Action
