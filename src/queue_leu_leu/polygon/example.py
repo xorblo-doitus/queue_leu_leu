@@ -29,7 +29,7 @@ BUILTIN_POLYGONS: dict[str, Polygon] = {
   # Glitchy configs:
   # 48, 37, 28, 58, 33 # FIXED
   # 21, 34, 11, 46, 44 # FIXED # Hhhhmm, this one seems caused by float precision limits
-  "test_unalign_distant": Polygon([
+  "test_unalign_far": Polygon([
     Vector2(-1, -1),
     Vector2(1, -1),
     Vector2(1.01, -1),
@@ -185,14 +185,16 @@ class PolygonEditor(PolygonDrawer):
 
 
 class LibraryIcon(PolygonDrawer):
-  def __init__(self, polygon: Polygon, position: Vector2 = Vector2(0, 0), color: pygame.Vector3 = pygame.Vector3(255, 255, 0), size = 32) -> None:
+  def __init__(self, polygon: Polygon, position: Vector2, color: pygame.Vector3, name: str, size = 32) -> None:
     self._size = size
+    self._name = name
+    self._icon_position = position
     
     farthest: float = 1
     for point in polygon.points:
       farthest = max(farthest, abs(point.x), abs(point.y))
     
-    super().__init__(polygon * (size / farthest * 0.4), position.elementwise() + size // 2, color)
+    super().__init__(polygon * (size / farthest * 0.35), position + Vector2(size // 2, size // 2 - 10), color)
     
     self._result = polygon
   
@@ -202,9 +204,11 @@ class LibraryIcon(PolygonDrawer):
     pygame.draw.rect(
       surface,
       0xffffff if hovered else 0,
-      pygame.Rect(self.position.elementwise() - (self._size // 2 - 2), (self._size-4,)*2),
+      pygame.Rect(self._icon_position, (self._size-4,)*2),
       1
     )
+    
+    surface.blit(font.render(self._name, False, 0xffffffff), self.position + Vector2(-self._size//2 + 4, self._size//2 - 14))
 
 
 class Library():
@@ -231,12 +235,12 @@ class Library():
     self._is_open = new_value
     
     if new_value:
-      self._window = Window("Polygon library")
+      self._window = Window("Polygon library", (self._columns * self.icon_size + 2*self._position.x, 480))
       self._renderer = Renderer(self._window)
       self._surface = Surface(self._window.size)
       self._texture = Texture(self._renderer, self._window.size)
+      
       self._surface.fill(0)
-      pygame.draw.circle(self._surface, 0xff00ff, Vector2(), 10)
       
       to_draw = BUILTIN_POLYGONS.keys()
       if not self.debug:
@@ -252,7 +256,7 @@ class Library():
         #   pygame.Rect(position.x - self.icon_size//2, position.x - self.icon_size//2, self.icon_size, self.icon_size),
         #   1,
         # )
-        self._icons.append(LibraryIcon(polygon, position, 0xffff00, self.icon_size))
+        self._icons.append(LibraryIcon(polygon, position, 0xff00ff if name.startswith("test_") else 0xffff00, name.removeprefix("test_"), self.icon_size))
         self._icons[-1].draw(self._surface, False, False)
       
       self._texture.update(self._surface)
