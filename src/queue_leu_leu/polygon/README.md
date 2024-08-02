@@ -13,6 +13,7 @@ Button      | Action
 ------------|:-------
 E           | Toggle polygon editor
 L           | Open polygon library
+P           | Configure points trough coordinates
 
 ## While following
 Button      | Action

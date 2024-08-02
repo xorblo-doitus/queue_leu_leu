@@ -374,6 +374,21 @@ class PolygonFollowExample(PolygonFollow):
       self.editing_polygon = not self._editing_polygon
       return True
     
+    if keys[pygame.K_p]:
+      result: str = askstring(
+        "Configurate",
+        "New points:\t\t\t\t\t\t",
+        initialvalue=", ".join(map(lambda p: f"{str(p.x)};{str(p.y)}", self.polygon.points)),
+      )
+      
+      self.polygon.points = [
+        Vector2(*map(float, part.split(";")))
+        for part in result.split(",")
+      ] if result else []
+      self.polygon.bake()
+      
+      return True
+    
     if self._editing_polygon:
       return self.handle_keyboard_editing(keys)
     
