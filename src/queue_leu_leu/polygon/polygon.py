@@ -304,7 +304,7 @@ class PolygonFollow:
     self.relative_positions.clear()
     self._debug_polygons.clear()
     
-    if not self.followers:
+    if not self.followers or len(self.polygon.points) <= 2:
       return
     
     # Caches
