@@ -14,6 +14,7 @@ Button      | Action
 E           | Toggle polygon editor
 L           | Open polygon library
 P           | Configure points trough coordinates
+Shift+P     | Print points as vectors to console
 
 ## While following
 Button      | Action

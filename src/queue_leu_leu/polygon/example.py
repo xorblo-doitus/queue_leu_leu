@@ -375,6 +375,10 @@ class PolygonFollowExample(PolygonFollow):
       return True
     
     if keys[pygame.K_p]:
+      if keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT]:
+        print(",\n".join(map(lambda p: repr(p)[1:-1], self.polygon.points)))
+        return True
+      
       result: str = askstring(
         "Configurate",
         "New points:\t\t\t\t\t\t",
