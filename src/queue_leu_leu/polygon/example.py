@@ -4,7 +4,7 @@ except ImportError:
 import pygame, random
 from pygame import Vector2, Surface
 from pygame._sdl2.video import Window, Renderer, Texture
-from tkinter.simpledialog import askstring
+from tkinter.simpledialog import askstring, askinteger
 
 
 BUILTIN_POLYGONS: dict[str, Polygon] = {
@@ -43,7 +43,7 @@ BUILTIN_POLYGONS: dict[str, Polygon] = {
     # Vector2(100, -49),
     # Vector2(90, -19),
     # Vector2(70, 13),
-  ]),
+  ])*5,
   
   "test_align": Polygon([
     Vector2(-1, -1),
@@ -239,6 +239,27 @@ class LibraryIcon(PolygonDrawer):
     )
     
     surface.blit(font.render(self._name, False, 0xffffffff), self.position + Vector2(-self._size//2 + 4, self._size//2 - 14))
+  
+  def get_result(self) -> Polygon:
+    return self._result
+
+
+class LibraryRegularPloygonGenerator(LibraryIcon):
+  def __init__(self, position: Vector2, color: pygame.Vector3, size=32) -> None:
+    super().__init__(self.generate_regular_polygon(5), position, color, "*regular polygon", size)
+  
+  
+  @staticmethod
+  def generate_regular_polygon(n: int) -> Polygon:
+    return Polygon([Vector2.from_polar((50, i/n*360)) for i in range(n)])
+  
+  def get_result(self) -> Polygon:
+    return self.generate_regular_polygon(askinteger(
+      "Configurate polygon generator",
+      "Sides:",
+      initialvalue=5,
+      minvalue=3,
+    ))
 
 
 class Library():
@@ -278,7 +299,7 @@ class Library():
       
       for i, name in enumerate(to_draw):
         polygon = BUILTIN_POLYGONS[name]
-        position = Vector2(self.icon_size * (i%self._columns), self.icon_size * (i//self._columns)) + self._position
+        position = self.i_to_pos(i)
         # print(pygame.Rect(position.x - self.icon_size//2, position.x - self.icon_size//2, self.icon_size, self.icon_size))
         # pygame.draw.rect(
         #   self._surface,
@@ -288,6 +309,9 @@ class Library():
         # )
         self._icons.append(LibraryIcon(polygon, position, 0xff00ff if name.startswith("test_") else 0xffff00, name.removeprefix("test_"), self.icon_size))
         self._icons[-1].draw(self._surface, False, False)
+      
+      self._icons.append(LibraryRegularPloygonGenerator(self.i_to_pos(len(self._icons)), 0x00ff00, self.icon_size))
+      self._icons[-1].draw(self._surface, False, False)
       
       self._texture.update(self._surface)
       self._texture.draw()
@@ -324,11 +348,14 @@ class Library():
       self._texture.draw()
       self._renderer.present()
   
+  def i_to_pos(self, i: int) -> Vector2:
+    return Vector2(self.icon_size * (i%self._columns), self.icon_size * (i//self._columns)) + self._position
+  
   def selected(self):
     if self._hovered == -1:
       return
     
-    self.follow.polygon.points = [*self._icons[self._hovered]._result.points]
+    self.follow.polygon.points = [*self._icons[self._hovered].get_result().points]
     self.follow.polygon.bake()
 
 
