@@ -257,7 +257,7 @@ class Polygon:
     while current_point != start_point:
       new_points.append(current_point)
       reference: Vector2 = Vector2(current_point) - new_points[-2]
-      print([point for point in graph[current_point] if point != new_points[-2]])
+      # print([point for point in graph[current_point] if point != new_points[-2]])
       current_point = min(
         (point for point in graph[current_point] if point != new_points[-2]),
         key=lambda point: angle_to_deg_closest_to_0(reference, Vector2(point)-current_point)
