@@ -1,10 +1,25 @@
 # You can use any other library that includes standard Vector things
 from pygame import Vector2
-from math import pi, cos, sin, asin, radians, sqrt
-from typing import Generator
+from math import pi, cos, sin, asin, radians, sqrt, isclose
+from typing import Generator, Self, Callable, Sequence
 
+type HashedVector2 = tuple[float, float]
+type Intersection = tuple[int, Vector2, float]
+
+# PI2 = pi*2
 ANGULAR_REFERENCE = Vector2(1, 0)
 get_absolute_angle_deg = ANGULAR_REFERENCE.angle_to
+
+
+def angle_to_deg_closest_to_0(self: Vector2, other: Vector2) -> float:
+  angle: float = self.angle_to(other)
+  
+  if angle < -180:
+    angle += 360
+  elif angle > 180:
+    angle -= 360
+  
+  return angle
 
 
 def scale_to_length(vector: Vector2, scale: float) -> Vector2:
@@ -14,27 +29,55 @@ def scale_to_length(vector: Vector2, scale: float) -> Vector2:
   return new
 
 
-# def intersect(p1: Vector2, p2: Vector2, d1: Vector2, d2: Vector2) -> Vector2|None:
-#   """
-#   WARNING: Computes intersection for infinite lines.
-#   WARNING: Return None if lines are parallel
-#   Python application of this formula :
-#   https://en.wikipedia.org/w/index.php?title=Line%E2%80%93line_intersection&oldid=1229564037#Given_two_points_on_each_line
-#   """
-#   x1, y1, x2, y2, x3, y3, x4, y4 = *p1, *p2, *d1, *d2
-#   denominator = ((x1-x2)*(y3-y4) - (y1-y2)*(x3-x4))
-  
-#   if denominator == 0:
-#     return None
-  
-#   cache_a = (x1*y2 - y1*x2)
-#   cache_b = (x3*y4 - y3*x4)
-  
-#   return Vector2(
-#     (cache_a*(x3-x4) - (x1-x2)*cache_b) / denominator,
-#     (cache_a*(y3-y4) - (y1-y2)*cache_b) / denominator
-#   )
+def get_segment_progress(point: Vector2, start: Vector2, displacement: Vector2) -> float:
+  """Assumes point lies on the segment"""
+  relative_to_start: Vector2 = point - start
+  return (
+    relative_to_start.x / displacement.x
+    if displacement.x else
+    relative_to_start.y / displacement.y
+  )
 
+
+def is_inside(point: Vector2, start: Vector2, displacement: Vector2, epsilon=0e-6) -> bool:
+  return epsilon <= get_segment_progress(point, start, displacement) <= 1 + epsilon
+
+
+def intersect_lines(p1: Vector2, p2: Vector2, d1: Vector2, d2: Vector2) -> Vector2|None:
+  """
+  WARNING: Computes intersection for infinite lines.
+  WARNING: Return None if lines are parallel
+  Python application of this formula :
+  https://en.wikipedia.org/w/index.php?title=Line%E2%80%93line_intersection&oldid=1229564037#Given_two_points_on_each_line
+  """
+  x1, y1, x2, y2, x3, y3, x4, y4 = *p1, *p2, *d1, *d2
+  denominator = ((x1-x2)*(y3-y4) - (y1-y2)*(x3-x4))
+  
+  if denominator == 0:
+    return None
+  
+  cache_a = (x1*y2 - y1*x2)
+  cache_b = (x3*y4 - y3*x4)
+  
+  return Vector2(
+    (cache_a*(x3-x4) - (x1-x2)*cache_b) / denominator,
+    (cache_a*(y3-y4) - (y1-y2)*cache_b) / denominator
+  )
+
+
+def intersect_segments(p1: Vector2, p2: Vector2, d1: Vector2, d2: Vector2) -> Vector2|None:
+  """
+  WARNING: Computes intersection for infinite lines.
+  WARNING: Return None if there is no intersection or if lines are coincident.
+  Python application of this formula :
+  https://en.wikipedia.org/w/index.php?title=Line%E2%80%93line_intersection&oldid=1229564037#Given_two_points_on_each_line
+  """
+  intersection = intersect_lines(p1, p2, d1, d2)
+  
+  if intersection is None or not is_inside(intersection, p1, p2-p1) or not is_inside(intersection, d1, d2-d1):
+    return None
+  
+  return intersection
 
 def Vector2_polar(magnitude: float, angle_rad: float) -> Vector2:
   return magnitude * Vector2(cos(angle_rad), sin(angle_rad))
@@ -111,8 +154,13 @@ class Polygon:
     self.points.sort(key=get_absolute_angle_deg)
     self.bake()
   
-  def growed(self, distance: float) -> "Polygon":
-    return Polygon(list(map(lambda point, growth_vector: point + growth_vector * distance, self.points, self._growth_vectors)))
+  def growed(self, distance: float, self_merge: bool = False) -> "Polygon":
+    new = Polygon(list(map(lambda point, growth_vector: point + growth_vector * distance, self.points, self._growth_vectors)))
+    
+    if self_merge:
+      new.merge_self_contained()
+    
+    return new
   
   def project(self, point: Vector2, segment_i: int) -> Vector2:
     return (point - self.points[segment_i]).project(self._vectors[segment_i]) + self.points[segment_i]
@@ -138,6 +186,86 @@ class Polygon:
     """Assumes point lies on the segment"""
     relative_to_start: Vector2 = point - self.points[segment_i]
     return relative_to_start.x / self._vectors[segment_i].x if self._vectors[segment_i].x else relative_to_start.y / self._vectors[segment_i].y
+  
+  def merge_self_contained(self) -> Self:
+    # return
+    # i: int = 0
+    # clockwise: bool = True
+    # points: list[Vector2] = []
+    # while i < len(self.points):
+    #   points.append(self.points[i])
+    #   for preshot_i in range(i+2, len(self.points)-2) if clockwise else :
+    #     intersetion: Vector2|None = intersect_segments(self.points[i], self.points[i+1], self.points[preshot_i], self.points[preshot_i+1])
+    #     if intersetion is not None:
+    #       points.append(intersetion)
+    #       clockwise = self._vectors[i].angle_to(self.points[preshot_i+1] - intersetion) % PI2 > pi
+    #       i = preshot_i
+    #       break
+    #   i += 1 if clockwise else -1
+    # print("merged")
+    
+    
+    
+    hashes: list[HashedVector2] = [(*point,) for point in self.points]
+    intersections: list[list[Intersection]] = [[] for _ in range(len(self.points))]
+    for i, (point, hash_, segment) in enumerate(zip(self.points, hashes, self._vectors)):
+      # graph[hash_] = [self.points[i-1], self.points[(i+1)%len(self.points)]]
+      for other_i in range(i+2, len(self.points)) if i else range(i+2, len(self.points)-1):
+        intersection: Vector2|None = intersect_segments(self.points[i], self.points[(i+1)%len(self.points)], self.points[other_i], self.points[(other_i+1)%len(self.points)])
+        if intersection is not None:
+          # print(i, other_i, intersection)
+          intersections[i].append((other_i, intersection, self.get_segment_progress(intersection, i)))
+          intersections[other_i].append((i, intersection, self.get_segment_progress(intersection, other_i)))
+    
+    for i, l in enumerate(intersections):
+      l.sort(key=lambda intersection: intersection[2])
+      l.insert(0, ((i-1)%len(self.points), self.points[i], -1))
+      l.append(((i+1)%len(self.points), self.points[(i+1)%len(self.points)], 2))
+    
+    graph: dict[HashedVector2, list[HashedVector2]] = {(*intersection[1],): [] for segment in intersections for intersection in segment}
+    # print(
+    #   "\n\n=======================\n\n",
+    #   intersections,
+    # )
+    for seg_i, segment in enumerate(intersections):
+      # graph[(*segment[0][1],)].append((*intersections[seg_i-1][-1][1],))
+      # graph[(*segment[0][1],)].append((*segment[1][1],))
+      # for inter_i in range(1, len(segment)-1):
+      for inter_i in range(1, len(segment)):
+        graph[(*segment[inter_i-1][1],)].append((*segment[inter_i][1],))
+        graph[(*segment[inter_i][1],)].append((*segment[inter_i-1][1],))
+      # DO NOT uncomment: wouldinsert extremities twice
+      # graph[(*segment[-1][1],)].append((*segment[-2][1],))
+      # graph[(*segment[0][1],)].append((*intersections[(seg_i+1)%len(intersections)][0][1],))
+    
+    
+    # start_i = 0
+    # start_point: Vector2 = self.points[start_i]
+    # for i, point in enumerate(self.points[1:]):
+    #   if point.x < start_point:
+    #     start_point = point
+    #     start_i = i
+    start_point: HashedVector2 = min(graph.keys(), key=lambda hash_: hash_[0])
+    new_points: list[HashedVector2] = [
+      start_point,
+    ]
+    current_point: HashedVector2 = min(
+      (point for point in graph[start_point]),
+      key=lambda point: get_absolute_angle_deg(Vector2(point)-start_point)
+    )
+    
+    while current_point != start_point:
+      new_points.append(current_point)
+      reference: Vector2 = Vector2(current_point) - new_points[-2]
+      print([point for point in graph[current_point] if point != new_points[-2]])
+      current_point = min(
+        (point for point in graph[current_point] if point != new_points[-2]),
+        key=lambda point: angle_to_deg_closest_to_0(reference, Vector2(point)-current_point)
+      )
+    
+    self.points = [*map(Vector2, new_points)]
+    self.bake()
+    return self
 
 
 # class PolygonWalker():
@@ -156,6 +284,11 @@ class Polygon:
 
 
   def walk(self) -> Generator[Vector2, float, None]:
+    if len(self.points) <= 1:
+      print("[W] Invalid polygon for walk: Point count is", len(self.points))
+      yield self.points[0] if self.points else Vector2()
+      yield None
+    
     segment_i: int = 0
     segment: Vector2 = self._vectors[segment_i]
     segment_progress: float = 0
@@ -276,6 +409,7 @@ class PolygonFollow:
     self.gap: float = gap
     self.polygon: Polygon = polygon
     self.rotation: float = 0
+    self.prevent_self_including: bool = True
     
     self._debug_polygons: list[Polygon] = []
 
@@ -319,7 +453,7 @@ class PolygonFollow:
     # Polygon specific variables
     biggest: float = to_add[0]
     last_biggest: float = 0
-    polygon: Polygon = self.polygon.growed(total_growth + biggest)
+    polygon: Polygon = self.polygon.growed(total_growth + biggest, self.prevent_self_including)
     walker: Generator[Vector2, float, None] = polygon.walk()
     positions: list[Vector2] = [next(walker)]
     last_positions: list[Vector2] = []
@@ -333,7 +467,7 @@ class PolygonFollow:
         last_biggest = biggest
         last_positions = positions
         biggest = size
-        polygon = self.polygon.growed(total_growth + biggest)
+        polygon = self.polygon.growed(total_growth + biggest, self.prevent_self_including)
         walker, positions = polygon.bulk_walk(chords[start_i:end_i-1])
         # Depending on the polygon, a grown version can fit less of the same followers
         if positions[-1] is None:
@@ -354,7 +488,7 @@ class PolygonFollow:
           if overfits == "growth":
             biggest = last_biggest
             positions = last_positions
-            polygon = self.polygon.growed(total_growth + biggest)
+            polygon = self.polygon.growed(total_growth + biggest, self.prevent_self_including)
           else:
             positions.pop()
           
@@ -363,9 +497,9 @@ class PolygonFollow:
         
         # Progress
         self._debug_polygons += [
-          self.polygon.growed(total_growth),
-          polygon,
-          self.polygon.growed(total_growth + 2*biggest),
+          self.polygon.growed(total_growth, self.prevent_self_including),
+          *((self.polygon.growed(total_growth + biggest, False), polygon) if self.prevent_self_including else (polygon,)),
+          self.polygon.growed(total_growth + 2*biggest, self.prevent_self_including),
         ]
         total_growth += 2*biggest + self.gap
         
@@ -374,8 +508,8 @@ class PolygonFollow:
         if start_i < len(to_add):
           biggest = to_add[start_i]
           last_biggest = 0
-          polygon = self.polygon.growed(total_growth + biggest)
-          walker = self.polygon.growed(total_growth + biggest).walk()
+          polygon = self.polygon.growed(total_growth + biggest, self.prevent_self_including)
+          walker = self.polygon.growed(total_growth + biggest, self.prevent_self_including).walk()
           positions = [next(walker)]
           last_positions = []
   
