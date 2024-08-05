@@ -22,7 +22,8 @@ Button      | Action
 Mouse       | Move the leader
 Return      | Add a follower
 Backspace   | Remove a random follower
-Shift       | Randomize the size of all followers 
+R           | Randomize the size of all followers 
+Shift + R   | Randomize the size of all followers to a small size
 Plus        | Increase the spacing between followers
 Minus       | Decrease the spacing between followers
 Mouse wheel | Change the rotation of the leader

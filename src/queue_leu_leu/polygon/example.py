@@ -491,9 +491,10 @@ class PolygonFollowExample(PolygonFollow):
         poly.pop_follower(random.randint(0, len(poly.followers)-1))
       return True
 
-    elif keys[pygame.K_RSHIFT]:
+    elif keys[pygame.K_r]:
+      range_: tuple[int, int] = (4, 8) if keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT] else (6, 60)
       for f in poly.followers:
-        f.size = random.randint(6, 60)
+        f.size = random.randint(*range_)
       return True
 
     elif keys[pygame.K_EQUALS]:
