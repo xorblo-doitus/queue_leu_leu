@@ -15,6 +15,23 @@ BUILTIN_POLYGONS: dict[str, Polygon] = {
     Vector2(-1, 1),
   ]) * 50,
   
+  "duo": Polygon([
+    Vector2(-79, 172.5),
+    Vector2(-180, 70.5),
+    Vector2(-186, -115.5),
+    Vector2(-57, -232.5),
+    Vector2(-56, -110.5),
+    Vector2(-31, -84.5),
+    Vector2(-7, -77.5),
+    Vector2(7, -77.5),
+    Vector2(31, -84.5),
+    Vector2(56, -110.5),
+    Vector2(57, -232.5),
+    Vector2(186, -115.5),
+    Vector2(180, 70.5),
+    Vector2(79, 172.5),
+  ]),
+  
   "hearth": Polygon([
     Vector2(0, 103),
     Vector2(-69, 19),
