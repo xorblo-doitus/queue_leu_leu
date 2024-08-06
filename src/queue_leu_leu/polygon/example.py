@@ -393,6 +393,7 @@ class PolygonFollowExample(PolygonFollow):
     self._editing_polygon: bool = False
     self._polygon_editor: PolygonEditor = PolygonEditor(polygon, Vector2(window.get_width(), window.get_height()) / 2)
     self._polygon_drawers: list[PolygonDrawer] = []
+    self._draw_debug: bool = True
     self._draw_chord_circles: bool = True
   
   @property
@@ -418,10 +419,13 @@ class PolygonFollowExample(PolygonFollow):
     if self.prevent_self_including and self._polygon_drawers:
       self._polygon_drawers.pop(1)
   
-  def draw(self, surface: Surface, debug=True) -> None:
+  def draw(self, surface: Surface, debug: bool|None = None) -> None:
     if self._editing_polygon:
       self._polygon_editor.draw(surface)
       return
+    
+    if debug is None:
+      debug = self._draw_debug
     
     position = self.leader.pos
     fsize = len(self.followers)
@@ -514,6 +518,10 @@ class PolygonFollowExample(PolygonFollow):
 
     elif keys[pygame.K_DOWN]:
       poly.gap -= 1
+      return True
+    
+    elif keys[pygame.K_d]:
+      self._draw_debug = not self._draw_debug
       return True
     
     elif keys[pygame.K_c]:
