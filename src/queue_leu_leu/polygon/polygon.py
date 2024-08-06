@@ -388,13 +388,13 @@ class Polygon:
         break
     return walker, result
   
-  def rotate_deg(self, angle: float):
+  def rotate_deg(self, angle: float) -> Self:
     for point in self.points:
       point.rotate_ip(angle)
     self.bake()
     return self
   
-  def rotate_rad(self, angle: float):
+  def rotate_rad(self, angle: float) -> Self:
     for point in self.points:
       point.rotate_rad_ip(angle)
     self.bake()
@@ -402,6 +402,14 @@ class Polygon:
   
   def __mul__(self, other: float) -> "Polygon":
     return Polygon([point * other for point in self.points])
+  
+  __rmul__ = __mul__
+  
+  def __imul__(self, other: float) -> Self:
+    for point in self.points:
+      point *= other
+    self.bake()
+    return self
 
 
 class PolygonFollower:
