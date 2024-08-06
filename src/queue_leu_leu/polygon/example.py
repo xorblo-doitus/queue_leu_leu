@@ -561,6 +561,13 @@ class PolygonFollowExample(PolygonFollow):
       )
       self._polygon_editor.polygon = self.polygon
       return True
+    elif keys[pygame.K_t]:
+      self.polygon.rotate_deg(askfloat(
+        "Rotate",
+        "Rotate clockwise by angle (in degrees):",
+        initialvalue=45,
+      ))
+      return True
     elif keys[pygame.K_g]:
       self._polygon_editor.update_growth_preview(
         askstring(

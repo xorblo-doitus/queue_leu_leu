@@ -1,7 +1,8 @@
 # You can use any other library that includes standard Vector things
+from types import UnionType
 from pygame import Vector2
 from math import pi, cos, sin, asin, radians, sqrt, isclose
-from typing import Generator, Self, Callable, Sequence
+from typing import Any, Generator, Self, Callable, Sequence
 
 type HashedVector2 = tuple[float, float]
 type Intersection = tuple[int, Vector2, float]
@@ -386,6 +387,18 @@ class Polygon:
       if result[-1] is None: # DO NOT check falsy (Vector2(0, 0) conflict)
         break
     return walker, result
+  
+  def rotate_deg(self, angle: float):
+    for point in self.points:
+      point.rotate_ip(angle)
+    self.bake()
+    return self
+  
+  def rotate_rad(self, angle: float):
+    for point in self.points:
+      point.rotate_rad_ip(angle)
+    self.bake()
+    return self
   
   def __mul__(self, other: float) -> "Polygon":
     return Polygon([point * other for point in self.points])
