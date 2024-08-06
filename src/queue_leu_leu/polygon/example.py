@@ -60,7 +60,7 @@ BUILTIN_POLYGONS: dict[str, Polygon] = {
     # Vector2(100, -49),
     # Vector2(90, -19),
     # Vector2(70, 13),
-  ])*5,
+  ])*0.2,
   
   "test_align": Polygon([
     Vector2(-1, -1),
@@ -414,6 +414,9 @@ class PolygonFollowExample(PolygonFollow):
       PolygonDrawer(polygon, self.leader.pos, colors[i%len(colors)])
       for i, polygon in enumerate(self._debug_polygons)
     ]
+    
+    if self.prevent_self_including and self._polygon_drawers:
+      self._polygon_drawers.pop(1)
   
   def draw(self, surface: Surface, debug=True) -> None:
     if self._editing_polygon:

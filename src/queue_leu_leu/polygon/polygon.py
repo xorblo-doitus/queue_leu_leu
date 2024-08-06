@@ -162,6 +162,9 @@ class Polygon:
     
     return new
   
+  def growed_to_inradius(self, desired_inradius: float) -> "Polygon":
+    return self * (desired_inradius / self._incircle_radius)
+  
   def project(self, point: Vector2, segment_i: int) -> Vector2:
     return (point - self.points[segment_i]).project(self._vectors[segment_i]) + self.points[segment_i]
   
@@ -446,14 +449,15 @@ class PolygonFollow:
     chords: list[float] = [to_add[i] + self.spacing + to_add[i+1] for i in range(len(to_add)-1)] 
     
     # Tracking variables
-    total_growth: float = self.leader.size + self.gap
+    last_growed_polygon: Polygon|None = None
+    last_growed_polygon_biggest: float = 0
     start_i: int = 0
     end_i: int = -1
     
     # Polygon specific variables
     biggest: float = to_add[0]
     last_biggest: float = 0
-    polygon: Polygon = self.polygon.growed(total_growth + biggest, self.prevent_self_including)
+    polygon: Polygon = last_growed_polygon.growed(last_growed_polygon_biggest + self.gap + biggest, self.prevent_self_including) if last_growed_polygon else self.polygon.growed_to_inradius(self.leader.size + self.gap + biggest)
     walker: Generator[Vector2, float, None] = polygon.walk()
     positions: list[Vector2] = [next(walker)]
     last_positions: list[Vector2] = []
@@ -467,7 +471,7 @@ class PolygonFollow:
         last_biggest = biggest
         last_positions = positions
         biggest = size
-        polygon = self.polygon.growed(total_growth + biggest, self.prevent_self_including)
+        polygon = last_growed_polygon.growed(last_growed_polygon_biggest + self.gap + biggest, self.prevent_self_including) if last_growed_polygon else self.polygon.growed_to_inradius(self.leader.size + self.gap + biggest)
         walker, positions = polygon.bulk_walk(chords[start_i:end_i-1])
         # Depending on the polygon, a grown version can fit less of the same followers
         if positions[-1] is None:
@@ -488,7 +492,7 @@ class PolygonFollow:
           if overfits == "growth":
             biggest = last_biggest
             positions = last_positions
-            polygon = self.polygon.growed(total_growth + biggest, self.prevent_self_including)
+            polygon = last_growed_polygon.growed(last_growed_polygon_biggest + self.gap + biggest, self.prevent_self_including) if last_growed_polygon else self.polygon.growed_to_inradius(self.leader.size + self.gap + biggest)
           else:
             positions.pop()
           
@@ -497,19 +501,23 @@ class PolygonFollow:
         
         # Progress
         self._debug_polygons += [
-          self.polygon.growed(total_growth, self.prevent_self_including),
-          *((self.polygon.growed(total_growth + biggest, False), polygon) if self.prevent_self_including else (polygon,)),
-          self.polygon.growed(total_growth + 2*biggest, self.prevent_self_including),
+          polygon.growed(-biggest),
+          polygon,
+          polygon.growed(biggest),
         ]
-        total_growth += 2*biggest + self.gap
+        if self.prevent_self_including:
+          self._debug_polygons.insert(-2, last_growed_polygon.growed(last_growed_polygon_biggest + self.gap + biggest, self.prevent_self_including) if last_growed_polygon else Polygon())
+        
+        last_growed_polygon = polygon
+        last_growed_polygon_biggest = biggest
         
         # Clean up variables
         start_i = end_i + 1
         if start_i < len(to_add):
           biggest = to_add[start_i]
           last_biggest = 0
-          polygon = self.polygon.growed(total_growth + biggest, self.prevent_self_including)
-          walker = self.polygon.growed(total_growth + biggest, self.prevent_self_including).walk()
+          polygon = last_growed_polygon.growed(last_growed_polygon_biggest + self.gap + biggest, self.prevent_self_including) if last_growed_polygon else self.polygon.growed_to_inradius(self.leader.size + self.gap + biggest)
+          walker = polygon.walk()
           positions = [next(walker)]
           last_positions = []
   
