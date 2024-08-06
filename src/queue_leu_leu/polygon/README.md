@@ -43,3 +43,4 @@ Mouse wheel            | Change current point
 R                      | Reset the polygon
 S                      | Sort points by angle
 G                      | Configure growth previews
+Z                      | Zoom (resize) the polygon by scaling it by an inputed factor

@@ -4,7 +4,7 @@ except ImportError:
 import pygame, random
 from pygame import Vector2, Surface
 from pygame._sdl2.video import Window, Renderer, Texture
-from tkinter.simpledialog import askstring, askinteger
+from tkinter.simpledialog import askstring, askinteger, askfloat
 
 
 BUILTIN_POLYGONS: dict[str, Polygon] = {
@@ -60,7 +60,7 @@ BUILTIN_POLYGONS: dict[str, Polygon] = {
     # Vector2(100, -49),
     # Vector2(90, -19),
     # Vector2(70, 13),
-  ])*0.2,
+  ]),
   
   "test_align": Polygon([
     Vector2(-1, -1),
@@ -552,6 +552,14 @@ class PolygonFollowExample(PolygonFollow):
         return True
     elif keys[pygame.K_s]:
       self.polygon.sort_by_angle()
+      return True
+    elif keys[pygame.K_z]:
+      self.polygon *= askfloat(
+        "Resize",
+        "Zoom factor:",
+        initialvalue=1,
+      )
+      self._polygon_editor.polygon = self.polygon
       return True
     elif keys[pygame.K_g]:
       self._polygon_editor.update_growth_preview(
