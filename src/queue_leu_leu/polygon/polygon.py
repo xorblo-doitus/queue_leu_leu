@@ -6,6 +6,7 @@ from typing import Any, Generator, Self, Callable, Sequence
 
 type HashedVector2 = tuple[float, float]
 type Intersection = tuple[int, Vector2, float]
+type Walker = Generator[Vector2, tuple[float, float], None]
 
 # PI2 = pi*2
 ANGULAR_REFERENCE = Vector2(1, 0)
@@ -287,7 +288,7 @@ class Polygon:
 #         self._segment_i += 1
 
 
-  def walk(self) -> Generator[Vector2, float, None]:
+  def walk(self) -> Walker:
     if len(self.points) <= 1:
       print("[W] Invalid polygon for walk: Point count is", len(self.points))
       yield self.points[0] if self.points else Vector2()
@@ -298,7 +299,8 @@ class Polygon:
     segment_progress: float = 0
     segment_length: float = segment.length()
     last_pos: Vector2 = self.points[0]
-    wanted_progress: float = yield last_pos
+    wanted_progress, distance_to_end = yield last_pos
+    reversed_polygon: Polygon|None = None
     
     while True:
       if segment_progress + wanted_progress <= segment_length:
@@ -338,27 +340,11 @@ class Polygon:
                 segment_progress = (result - self.points[new_segment_i]).length()
                 break
           else:
-            # progress_to_intersection: float = (
-            #   available_progress
-            #   if segment_i + 1 == new_segment_i else
-            #   (intersect(
-            #     self.points[segment_i],
-            #     self.points[segment_i+1],
-            #     self.points[new_segment_i],
-            #     self.points[(new_segment_i+1)%len(self.points)]
-            #   ) - self.points[segment_i] + scale_to_length(segment, segment_progress)).length()
-            # )
             to_start: Vector2 = self.points[new_segment_i] - last_pos
             angle_last_start_new: float = abs(pi - radians(abs(to_start.angle_to(self._vectors[new_segment_i]))))
             distance_last_start = to_start.length()
             sin_next: float = distance_last_start * sin(angle_last_start_new) / wanted_progress
             angle_deviation: float = angle_last_start_new + asin(sin_next)
-            # if angle_deviation <= 0:
-            #   print("fixed")
-            #   angle_deviation = pi - angle_last_start_new - asin(sin_next)
-            # print(angle_last_start_new + abs(asin(sin_next)), "vs", pi - angle_last_start_new - abs(asin(sin_next)))
-            # angle_deviation: float =  angle_last_start_new + abs(asin(sin_next))
-            # angle_deviation: float = pi - angle_last_start_new - abs(asin(sin_next))
             new_progress: float = distance_last_start * sin(angle_deviation) / sin_next
             attempt: Vector2 = self.points[new_segment_i] + scale_to_length(self._vectors[new_segment_i], new_progress)
             if 0 <= self.get_segment_progress(attempt, new_segment_i) <= 1:
@@ -377,13 +363,28 @@ class Polygon:
           yield None
           return
       
-      wanted_progress: float = yield last_pos
+      if distance_to_end > 0:
+        if reversed_polygon is None:
+          reversed_polygon = Polygon(self.points[::-1])
+        
+        reversed_walker = reversed_polygon.walk()
+        reversed_walker.send(None)
+        reversed_walker.send((distance_to_end, -1))
+        _locals = reversed_walker.gi_frame.f_locals
+        reversed_seg_i: int = len(self._vectors) - _locals["segment_i"] - 1
+        if reversed_seg_i < segment_i or (
+          reversed_seg_i == segment_i and segment_length - _locals["segment_progress"] < segment_progress
+        ):
+          yield None
+          return
+      
+      wanted_progress, distance_to_end = yield last_pos
   
-  def bulk_walk(self, distances) -> tuple[Generator[Vector2, float, None], list[Vector2|None]]:
+  def bulk_walk(self, distances: list[float], distances_to_end: list[float]) -> tuple[Walker, list[Vector2|None]]:
     walker: Generator[Vector2, float, None] = self.walk()
     result: list[Vector2] = [next(walker)]
-    for distance in distances:
-      result.append(walker.send(distance))
+    for data in zip(distances, distances_to_end):
+      result.append(walker.send(data))
       if result[-1] is None: # DO NOT check falsy (Vector2(0, 0) conflict)
         break
     return walker, result
@@ -467,7 +468,7 @@ class PolygonFollow:
     
     # Caches
     to_add: list[float] = [f.size for f in self.followers]
-    chords: list[float] = [to_add[i] + self.spacing + to_add[i+1] for i in range(len(to_add)-1)] 
+    chords: list[float] = [to_add[i] + self.spacing + to_add[i+1] for i in range(len(to_add)-1)]
     
     # Tracking variables
     last_growed_polygon: Polygon|None = None
@@ -482,6 +483,7 @@ class PolygonFollow:
     walker: Generator[Vector2, float, None] = polygon.walk()
     positions: list[Vector2] = [next(walker)]
     last_positions: list[Vector2] = []
+    cached_distance_to_end: float = to_add[start_i] + self.gap
     
     while end_i < len(to_add) - 1:
       end_i += 1
@@ -493,13 +495,13 @@ class PolygonFollow:
         last_positions = positions
         biggest = size
         polygon = last_growed_polygon.growed(last_growed_polygon_biggest + self.gap + biggest, self.prevent_self_including) if last_growed_polygon else self.polygon.growed_to_inradius(self.leader.size + self.gap + biggest)
-        walker, positions = polygon.bulk_walk(chords[start_i:end_i-1])
+        walker, positions = polygon.bulk_walk(chords[start_i:end_i-1], (cached_distance_to_end + to_add[i] for i in range(start_i, end_i-1)))
         # Depending on the polygon, a grown version can fit less of the same followers
         if positions[-1] is None:
           overfits = "growth"
       
       if not overfits and end_i - start_i >= 1:
-        positions.append(walker.send(chords[end_i-1]))
+        positions.append(walker.send((chords[end_i-1], cached_distance_to_end + to_add[end_i])))
       
       overfits = (
         overfits
@@ -541,6 +543,7 @@ class PolygonFollow:
           walker = polygon.walk()
           positions = [next(walker)]
           last_positions = []
+          cached_distance_to_end = to_add[start_i] + self.gap
   
 
   def add_follower(self, follower: PolygonFollower):
