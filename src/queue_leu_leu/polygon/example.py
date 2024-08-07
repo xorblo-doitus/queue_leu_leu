@@ -101,6 +101,19 @@ BUILTIN_POLYGONS: dict[str, Polygon] = {
     Vector2(85, -133),
     Vector2(80, 102)
   ]),
+  
+  # Glitchy config:
+  # 28, 30, 18, 50, 36, 11, 31, 16
+  "test_start_to_end": Polygon([
+    Vector2(-50, 50),
+    Vector2(-50, -50),
+    Vector2(50, -50),
+    Vector2(50, 50),
+    Vector2(-33, 60),
+    Vector2(-38, 42),
+    Vector2(-43, 61),
+    Vector2(-44, 42),
+  ]),
 }
 
 
