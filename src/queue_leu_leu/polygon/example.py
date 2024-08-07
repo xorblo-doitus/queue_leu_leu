@@ -383,6 +383,8 @@ class Library():
     
     self.follow.polygon.points = [*self._icons[self._hovered].get_result().points]
     self.follow.polygon.bake()
+    
+    self.is_open = False
 
 
 class PolygonFollowExample(PolygonFollow):
