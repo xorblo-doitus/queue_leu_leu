@@ -365,7 +365,7 @@ class Polygon:
       
       if distance_to_end > 0:
         if reversed_polygon is None:
-          reversed_polygon = Polygon(self.points[::-1])
+          reversed_polygon = Polygon([self.points[0]] + self.points[:0:-1])
         
         reversed_walker = reversed_polygon.walk()
         reversed_walker.send(None)

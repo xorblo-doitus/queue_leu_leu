@@ -103,7 +103,7 @@ BUILTIN_POLYGONS: dict[str, Polygon] = {
   ]),
   
   # Glitchy config:
-  # 28, 30, 18, 50, 36, 11, 31, 16
+  # 28, 30, 18, 50, 36, 11, 31, 16 # Fixed
   "test_start_to_end": Polygon([
     Vector2(-50, 50),
     Vector2(-50, -50),
@@ -476,6 +476,9 @@ class PolygonFollowExample(PolygonFollow):
         )
     
     pygame.draw.circle(surface, (255, 0, 0), position, self.leader.size)
+    
+    
+    pygame.draw.circle(surface, 0xffffff, self.leader.pos + Vector2(-5.46203, 89.1761), 3)
 
   def handle_keyboard(self, keys) -> bool:
     if keys[pygame.K_e]:
