@@ -85,6 +85,7 @@ BUILTIN_POLYGONS: dict[str, Polygon] = {
   ]) * 100,
 
   # Glitchy config: 10, 52, 29, 42, 26, 46, 36, 8, 46, 57, 30 # FIXED
+  # With anti overlap: 45, 18, 23, 49, 6, 13, 54, 58, 14, 13 # Fixed
   "test_angles": Polygon([
     Vector2(-0.4, 0.5),
     Vector2(-0.4, -1),
@@ -113,6 +114,15 @@ BUILTIN_POLYGONS: dict[str, Polygon] = {
     Vector2(-38, 42),
     Vector2(-43, 61),
     Vector2(-44, 42),
+  ]),
+  
+  # Glitchy config:
+  # 36, 28, 37, 12, 51
+  "test_cross_overlap": Polygon([
+    Vector2(-159, 98),
+    Vector2(-159, -101),
+    Vector2(60, 133),
+    Vector2(49, -120),
   ]),
 }
 
@@ -402,8 +412,8 @@ class Library():
 
 class PolygonFollowExample(PolygonFollow):
   """Inherit the Arc class to draw elements and handle keyboard and mouse"""
-  def __init__(self, spacing: float, gap: float, polygon: Polygon, leader: PolygonFollower):
-    super().__init__(spacing, gap, polygon, leader)
+  def __init__(self, spacing: float, gap: float, polygon: Polygon, leader: PolygonFollower, cross_overlap: bool = True):
+    super().__init__(spacing, gap, polygon, leader, cross_overlap)
     
     self._editing_polygon: bool = False
     self._polygon_editor: PolygonEditor = PolygonEditor(polygon, Vector2(window.get_width(), window.get_height()) / 2)
@@ -476,14 +486,6 @@ class PolygonFollowExample(PolygonFollow):
         )
     
     pygame.draw.circle(surface, (255, 0, 0), position, self.leader.size)
-    
-    
-    
-    pygame.draw.circle(surface, 0xffffff, self.leader.pos + Vector2(-5.46203, 89.1761), 3)
-
-
-    
-    pygame.draw.circle(surface, 0xffffff, self.leader.pos + Vector2(-5.46203, 89.1761), 3)
 
   def handle_keyboard(self, keys) -> bool:
     if keys[pygame.K_e]:
@@ -633,7 +635,7 @@ clock = pygame.time.Clock()
 font = pygame.font.SysFont('Consolas', 16)
 
 # poly = PolygonFollowExample(16, 24, Polygon([*map(Vector2, [(-578.0, -207.69630290072004), (-578.0, -404.7175432772935), (-522.1138894472376, -547.5376035787973), (-410.8091964740883, -665.3896314327202), (-207.36601351399574, -714.4966066299838), (-207.36601351399574, -714.4966066299838), (-4.858122220787476, -561.0815374684624), (0.0, -577.6801217228199), (0.0, -577.6801217228199), (-4.858122220787476, -561.0815374684624)])])*0.5, PolygonFollower(Vector2(100, 100), 5))
-poly = PolygonFollowExample(16, 24, Polygon(BUILTIN_POLYGONS["test_angles"].points), PolygonFollower(Vector2(100, 100), 5))
+poly = PolygonFollowExample(16, 24, Polygon(BUILTIN_POLYGONS["test_angles"].points), PolygonFollower(Vector2(100, 100), 5), False)
 library = Library(poly)
 # library.is_open = True
 run = True

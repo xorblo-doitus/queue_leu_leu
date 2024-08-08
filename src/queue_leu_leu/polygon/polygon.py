@@ -6,7 +6,8 @@ from typing import Any, Generator, Self, Callable, Sequence
 
 type HashedVector2 = tuple[float, float]
 type Intersection = tuple[int, Vector2, float]
-type Walker = Generator[Vector2, tuple[float, float], None]
+type Walker = Generator[Vector2|None, tuple[float, float], None]
+type NoCrossOverlapWalker = Generator[Vector2|None, float, None]
 
 # PI2 = pi*2
 ANGULAR_REFERENCE = Vector2(1, 0)
@@ -213,6 +214,7 @@ class Polygon:
     
     hashes: list[HashedVector2] = [(*point,) for point in self.points]
     intersections: list[list[Intersection]] = [[] for _ in range(len(self.points))]
+    # TODO remove unused things
     for i, (point, hash_, segment) in enumerate(zip(self.points, hashes, self._vectors)):
       # graph[hash_] = [self.points[i-1], self.points[(i+1)%len(self.points)]]
       for other_i in range(i+2, len(self.points)) if i else range(i+2, len(self.points)-1):
@@ -389,6 +391,105 @@ class Polygon:
         break
     return walker, result
   
+  def walk_no_cross_overlap(self, spacing: float, first_size: float) -> NoCrossOverlapWalker:
+    if len(self.points) <= 1:
+      print("[W] Invalid polygon for walk: Point count is", len(self.points))
+      yield self.points[0] if self.points else Vector2()
+      yield None
+    
+    segment_i: int = 0
+    segment: Vector2 = self._vectors[segment_i]
+    segment_progress: float = 0
+    segment_length: float = segment.length()
+    positions: list[Vector2] = [self.points[0]]
+    sizes: list[float] = [first_size, (yield positions[-1])]
+    space_from: int = -1
+    wanted_progress: float = sizes[-1] + spacing + sizes[-2]
+    
+    while True:
+      if space_from == -1 and segment_progress + wanted_progress <= segment_length:
+          segment_progress += wanted_progress
+          if segment_progress == segment_length:
+            segment_i += 1
+            if segment_i >= len(self._vectors):
+              yield None
+              return
+            segment = self._vectors[segment_i]
+            segment_length = segment.length()
+            segment_progress = 0
+            positions.append(self.points[segment_i])
+          else:
+            positions.append(self.points[segment_i] + scale_to_length(segment, segment_progress))
+      else:
+        if space_from == -1:
+          new_segment_i: int = segment_i + 1
+        else:
+          new_segment_i = segment_i
+        result: None|Vector2 = None
+        while new_segment_i < len(self._vectors):
+          to_start: Vector2 = self.points[new_segment_i] - positions[space_from]
+          angle_to_next: float = radians(self._vectors[new_segment_i].angle_to(to_start))
+          if abs(angle_to_next%pi) <= 1e-6:
+            extend_from = self.project(positions[space_from], new_segment_i)
+            extend_by = wanted_progress * cos(asin((extend_from - positions[space_from]).length()/wanted_progress))
+            displacement = scale_to_length(segment, extend_by)
+            attempts: list[tuple[Vector2, float]] = list(map(
+              lambda attempt: (attempt, self.get_segment_progress(attempt, new_segment_i)),
+              [
+                extend_from + displacement,
+                extend_from - displacement
+              ]
+            ))
+            attempts.sort(key=lambda attempt: attempt[1])
+            for attempt in attempts:
+              if (segment_progress / segment_length if new_segment_i == segment_i else 0) <= attempt[1] <= 1:
+                result = attempt[0]
+                segment_progress = (result - self.points[new_segment_i]).length()
+                break
+          else:
+            angle_last_start_new: float = abs(pi - radians(abs(to_start.angle_to(self._vectors[new_segment_i]))))
+            distance_last_start = to_start.length()
+            sin_next: float = distance_last_start * sin(angle_last_start_new) / wanted_progress
+            # TODO fix this domain error
+            angle_deviation: float = angle_last_start_new + asin(sin_next)
+            new_progress: float = distance_last_start * sin(angle_deviation) / sin_next
+            attempt: Vector2 = self.points[new_segment_i] + scale_to_length(self._vectors[new_segment_i], new_progress)
+            if 0 <= self.get_segment_progress(attempt, new_segment_i) <= 1:
+              result = attempt
+              segment_progress = new_progress
+          
+          if result is not None: # Warning: Do not check falsy as Vector can be (0, 0)
+            segment_i = new_segment_i
+            segment = self._vectors[segment_i]
+            segment_length = segment.length()
+            positions.append(result)
+            break
+          
+          new_segment_i += 1
+        else:
+          yield None
+          return
+      
+      for i in range(len(sizes) - (2 if space_from == -1 else 1)):
+        if i != space_from and (sizes[i] + spacing + sizes[-1])**2 > (positions[i] - positions[-1]).length_squared():
+          positions.pop()
+          space_from = i
+          wanted_progress = sizes[i] + spacing + sizes[-1]
+          break
+      else:
+        sizes.append((yield positions[-1]))
+        wanted_progress = sizes[-1] + spacing + sizes[-2]
+        space_from = -1
+  
+  def bulk_walk_no_cross_overlap(self, spacing: float, sizes: list[float]) -> tuple[NoCrossOverlapWalker, list[Vector2|None]]:
+    walker: Generator[Vector2, float, None] = self.walk_no_cross_overlap(spacing, sizes[0])
+    result: list[Vector2] = [next(walker)]
+    for i in range(1, len(sizes)):
+      result.append(walker.send(sizes[i]))
+      if result[-1] is None: # DO NOT check falsy (Vector2(0, 0) conflict)
+        break
+    return walker, result
+  
   def rotate_deg(self, angle: float) -> Self:
     for point in self.points:
       point.rotate_ip(angle)
@@ -420,12 +521,13 @@ class PolygonFollower:
 
 
 class PolygonFollow:
-  def __init__(self, spacing: float, gap: float, polygon: Polygon, leader: PolygonFollower):
+  def __init__(self, spacing: float, gap: float, polygon: Polygon, leader: PolygonFollower, cross_overlap: bool = True):
     """
     :param spacing: distance between followers
     :param gap: minimum distance between rings
     :param max_angle: max angle each side, at back of the leader
     :param leader: the leader
+    :param cross_overlap: If True, non consecutive followers can overlap (like at intersections). If False, a slow algorithm prevent this.
     """
     self.leader: PolygonFollower = leader
     self.followers: list[PolygonFollower] = []
@@ -435,6 +537,7 @@ class PolygonFollow:
     self.polygon: Polygon = polygon
     self.rotation: float = 0
     self.prevent_self_including: bool = True
+    self.cross_overlap: bool = cross_overlap
     
     self._debug_polygons: list[Polygon] = []
 
@@ -468,7 +571,8 @@ class PolygonFollow:
     
     # Caches
     to_add: list[float] = [f.size for f in self.followers]
-    chords: list[float] = [to_add[i] + self.spacing + to_add[i+1] for i in range(len(to_add)-1)]
+    if self.cross_overlap:
+      chords: list[float] = [to_add[i] + self.spacing + to_add[i+1] for i in range(len(to_add)-1)]
     
     # Tracking variables
     last_growed_polygon: Polygon|None = None
@@ -480,10 +584,11 @@ class PolygonFollow:
     biggest: float = to_add[0]
     last_biggest: float = 0
     polygon: Polygon = last_growed_polygon.growed(last_growed_polygon_biggest + self.gap + biggest, self.prevent_self_including) if last_growed_polygon else self.polygon.growed_to_inradius(self.leader.size + self.gap + biggest)
-    walker: Generator[Vector2, float, None] = polygon.walk()
+    walker: Walker|NoCrossOverlapWalker = polygon.walk() if self.cross_overlap else polygon.walk_no_cross_overlap(self.spacing, to_add[start_i])
     positions: list[Vector2] = [next(walker)]
     last_positions: list[Vector2] = []
-    cached_distance_to_end: float = to_add[start_i] + self.gap
+    if self.cross_overlap:
+      cached_distance_to_end: float = to_add[start_i] + self.spacing
     
     while end_i < len(to_add) - 1:
       end_i += 1
@@ -495,13 +600,14 @@ class PolygonFollow:
         last_positions = positions
         biggest = size
         polygon = last_growed_polygon.growed(last_growed_polygon_biggest + self.gap + biggest, self.prevent_self_including) if last_growed_polygon else self.polygon.growed_to_inradius(self.leader.size + self.gap + biggest)
-        walker, positions = polygon.bulk_walk(chords[start_i:end_i-1], (cached_distance_to_end + to_add[i] for i in range(start_i, end_i-1)))
+        # TODO verify indices for cross_overlap
+        walker, positions = polygon.bulk_walk(chords[start_i:end_i-1], (cached_distance_to_end + to_add[i] for i in range(start_i, end_i-1))) if self.cross_overlap else polygon.bulk_walk_no_cross_overlap(self.spacing, to_add[start_i:end_i])
         # Depending on the polygon, a grown version can fit less of the same followers
         if positions[-1] is None:
           overfits = "growth"
       
       if not overfits and end_i - start_i >= 1:
-        positions.append(walker.send((chords[end_i-1], cached_distance_to_end + to_add[end_i])))
+        positions.append(walker.send((chords[end_i-1], cached_distance_to_end + to_add[end_i]) if self.cross_overlap else to_add[end_i]))
       
       overfits = (
         overfits
@@ -540,10 +646,11 @@ class PolygonFollow:
           biggest = to_add[start_i]
           last_biggest = 0
           polygon = last_growed_polygon.growed(last_growed_polygon_biggest + self.gap + biggest, self.prevent_self_including) if last_growed_polygon else self.polygon.growed_to_inradius(self.leader.size + self.gap + biggest)
-          walker = polygon.walk()
+          walker = polygon.walk() if self.cross_overlap else polygon.walk_no_cross_overlap(self.spacing, to_add[start_i])
           positions = [next(walker)]
           last_positions = []
-          cached_distance_to_end = to_add[start_i] + self.gap
+          if self.cross_overlap:
+            cached_distance_to_end = to_add[start_i] + self.spacing
   
 
   def add_follower(self, follower: PolygonFollower):
