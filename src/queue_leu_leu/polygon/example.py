@@ -478,6 +478,11 @@ class PolygonFollowExample(PolygonFollow):
     pygame.draw.circle(surface, (255, 0, 0), position, self.leader.size)
     
     
+    
+    pygame.draw.circle(surface, 0xffffff, self.leader.pos + Vector2(-5.46203, 89.1761), 3)
+
+
+    
     pygame.draw.circle(surface, 0xffffff, self.leader.pos + Vector2(-5.46203, 89.1761), 3)
 
   def handle_keyboard(self, keys) -> bool:
