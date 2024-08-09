@@ -236,21 +236,6 @@ class Polygon:
     return self
 
 
-# class PolygonWalker():
-#   def __init__(self, polygon: Polygon) -> None:
-#     self._polygon: Polygon = polygon
-#     self._segment_i: int = 0
-#     self._segment_progress: float = 0
-    
-#     self._segment_length: float = self._polygon._vectors[self._segment_i].length()
-  
-#   def progress(self, distance: float) -> Vector2:
-#     if self._segment_progress + distance <= self._segment_length:
-#       self._segment_progress += distance
-#       if self._segment_progress == self._segment_length:
-#         self._segment_i += 1
-
-
   def walk(self) -> Walker:
     if len(self.points) <= 1:
       print("[W] Invalid polygon for walk: Point count is", len(self.points))
@@ -281,7 +266,6 @@ class Polygon:
             last_pos = self.points[segment_i] + scale_to_length(segment, segment_progress)
       else:
         new_segment_i: int = segment_i + 1
-        # available_progress: float = segment.length() - segment_progress
         result: None|Vector2 = None
         while new_segment_i < len(self._vectors):
           angle_to_next: float = radians(self._vectors[new_segment_i].angle_to(segment))
@@ -411,7 +395,7 @@ class Polygon:
             angle_last_start_new: float = abs(pi - radians(abs(to_start.angle_to(self._vectors[new_segment_i]))))
             distance_last_start = to_start.length()
             sin_next: float = distance_last_start * sin(angle_last_start_new) / wanted_progress
-            # TODO fix this domain error
+            # TODO Verify that the right solution is taken between asin and 180-asin
             angle_deviation: float = angle_last_start_new + asin(sin_next)
             new_progress: float = distance_last_start * sin(angle_deviation) / sin_next
             attempt: Vector2 = self.points[new_segment_i] + scale_to_length(self._vectors[new_segment_i], new_progress)
