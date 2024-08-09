@@ -194,68 +194,30 @@ class Polygon:
     return relative_to_start.x / self._vectors[segment_i].x if self._vectors[segment_i].x else relative_to_start.y / self._vectors[segment_i].y
   
   def merge_self_contained(self) -> Self:
-    # return
-    # i: int = 0
-    # clockwise: bool = True
-    # points: list[Vector2] = []
-    # while i < len(self.points):
-    #   points.append(self.points[i])
-    #   for preshot_i in range(i+2, len(self.points)-2) if clockwise else :
-    #     intersetion: Vector2|None = intersect_segments(self.points[i], self.points[i+1], self.points[preshot_i], self.points[preshot_i+1])
-    #     if intersetion is not None:
-    #       points.append(intersetion)
-    #       clockwise = self._vectors[i].angle_to(self.points[preshot_i+1] - intersetion) % PI2 > pi
-    #       i = preshot_i
-    #       break
-    #   i += 1 if clockwise else -1
-    # print("merged")
+    cached_len: int = len(self.points)
+    intersections: list[list[Intersection]] = [[] for _ in range(cached_len)]
     
-    
-    
-    hashes: list[HashedVector2] = [(*point,) for point in self.points]
-    intersections: list[list[Intersection]] = [[] for _ in range(len(self.points))]
-    # TODO remove unused things
-    for i, (point, hash_, segment) in enumerate(zip(self.points, hashes, self._vectors)):
-      # graph[hash_] = [self.points[i-1], self.points[(i+1)%len(self.points)]]
-      for other_i in range(i+2, len(self.points)) if i else range(i+2, len(self.points)-1):
-        intersection: Vector2|None = intersect_segments(self.points[i], self.points[(i+1)%len(self.points)], self.points[other_i], self.points[(other_i+1)%len(self.points)])
+    for i, point in enumerate(self.points):
+      for other_i in range(i+2, cached_len) if i else range(i+2, cached_len-1):
+        intersection: Vector2|None = intersect_segments(point, self.points[(i+1)%cached_len], self.points[other_i], self.points[(other_i+1)%cached_len])
         if intersection is not None:
-          # print(i, other_i, intersection)
           intersections[i].append((other_i, intersection, self.get_segment_progress(intersection, i)))
           intersections[other_i].append((i, intersection, self.get_segment_progress(intersection, other_i)))
     
     for i, l in enumerate(intersections):
       l.sort(key=lambda intersection: intersection[2])
-      l.insert(0, ((i-1)%len(self.points), self.points[i], -1))
-      l.append(((i+1)%len(self.points), self.points[(i+1)%len(self.points)], 2))
+      l.insert(0, ((i-1)%cached_len, self.points[i], -1))
+      l.append(((i+1)%cached_len, self.points[(i+1)%cached_len], 2))
     
     graph: dict[HashedVector2, list[HashedVector2]] = {(*intersection[1],): [] for segment in intersections for intersection in segment}
-    # print(
-    #   "\n\n=======================\n\n",
-    #   intersections,
-    # )
-    for seg_i, segment in enumerate(intersections):
-      # graph[(*segment[0][1],)].append((*intersections[seg_i-1][-1][1],))
-      # graph[(*segment[0][1],)].append((*segment[1][1],))
-      # for inter_i in range(1, len(segment)-1):
+    
+    for segment in intersections:
       for inter_i in range(1, len(segment)):
         graph[(*segment[inter_i-1][1],)].append((*segment[inter_i][1],))
         graph[(*segment[inter_i][1],)].append((*segment[inter_i-1][1],))
-      # DO NOT uncomment: wouldinsert extremities twice
-      # graph[(*segment[-1][1],)].append((*segment[-2][1],))
-      # graph[(*segment[0][1],)].append((*intersections[(seg_i+1)%len(intersections)][0][1],))
     
-    
-    # start_i = 0
-    # start_point: Vector2 = self.points[start_i]
-    # for i, point in enumerate(self.points[1:]):
-    #   if point.x < start_point:
-    #     start_point = point
-    #     start_i = i
     start_point: HashedVector2 = min(graph.keys(), key=lambda hash_: hash_[0])
-    new_points: list[HashedVector2] = [
-      start_point,
-    ]
+    new_points: list[HashedVector2] = [start_point]
     current_point: HashedVector2 = min(
       (point for point in graph[start_point]),
       key=lambda point: get_absolute_angle_deg(Vector2(point)-start_point)
@@ -264,7 +226,6 @@ class Polygon:
     while current_point != start_point:
       new_points.append(current_point)
       reference: Vector2 = Vector2(current_point) - new_points[-2]
-      # print([point for point in graph[current_point] if point != new_points[-2]])
       current_point = min(
         (point for point in graph[current_point] if point != new_points[-2]),
         key=lambda point: angle_to_deg_closest_to_0(reference, Vector2(point)-current_point)
