@@ -561,8 +561,7 @@ class PolygonFollow:
         last_positions = positions
         biggest = size
         polygon = last_growed_polygon.growed(last_growed_polygon_biggest + self.gap + biggest, self.prevent_self_including) if last_growed_polygon else self.polygon.growed_to_inradius(self.leader.size + self.gap + biggest)
-        # TODO verify indices for cross_overlap
-        walker, positions = polygon.bulk_walk(chords[start_i:end_i-1], (cached_distance_to_end + to_add[i] for i in range(start_i, end_i-1))) if self.cross_overlap else polygon.bulk_walk_no_cross_overlap(self.spacing, to_add[start_i:end_i])
+        walker, positions = polygon.bulk_walk(chords[start_i:end_i-1], (cached_distance_to_end + to_add[i] for i in range(start_i, end_i))) if self.cross_overlap else polygon.bulk_walk_no_cross_overlap(self.spacing, to_add[start_i:end_i])
         # Depending on the polygon, a grown version can fit less of the same followers
         if positions[-1] is None:
           overfits = "growth"
