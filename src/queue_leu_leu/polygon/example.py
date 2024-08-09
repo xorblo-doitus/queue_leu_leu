@@ -7,26 +7,6 @@ from pygame._sdl2.video import Window, Renderer, Texture
 from tkinter.simpledialog import askstring, askinteger, askfloat
 from math import sqrt
 
-# Source: https://gist.github.com/B45i/652e54adafa3aabed7518c6809ac24c0
-primes: list[int] = [
-  2, 3, 5, 7, 11, 13, 17, 19, 23, 29,
-  31, 37, 41, 43, 47, 53, 59, 61, 67, 71,
-  73, 79, 83, 89, 97, 101, 103, 107, 109, 113,
-  127, 131, 137, 139, 149, 151, 157, 163, 167, 173,
-  179, 181, 191, 193, 197, 199, 211, 223, 227, 229,
-  233, 239, 241, 251, 257, 263, 269, 271, 277, 281,
-  283, 293, 307, 311, 313, 317, 331, 337, 347, 349,
-  353, 359, 367, 373, 379, 383, 389, 397, 401, 409,
-  419, 421, 431, 433, 439, 443, 449, 457, 461, 463,
-  467, 479, 487, 491, 499, 503, 509, 521, 523, 541,
-  547, 557, 563, 569, 571, 577, 587, 593, 599, 601,
-  607, 613, 617, 619, 631, 641, 643, 647, 653, 659,
-  661, 673, 677, 683, 691, 701, 709, 719, 727, 733,
-  739, 743, 751, 757, 761, 769, 773, 787, 797, 809,
-  811, 821, 823, 827, 829, 839, 853, 857, 859, 863,
-  877, 881, 883, 887, 907, 911, 919, 929, 937, 941,
-  947, 953, 967, 971, 977, 983, 991, 997,
-]
 
 BUILTIN_POLYGONS: dict[str, Polygon] = {
   "square": Polygon([
@@ -159,22 +139,6 @@ def get_closest_point(pos: Vector2, points: list[Vector2]|dict[int, Vector2]) ->
       closest_distance_squared = distance_squared
   
   return closest_i, closest_distance_squared
-
-def factors(n: int) -> list[int]:
-  result: list[int] = []
-  start: int = 2
-  while n > 1:
-    for i in range(start, int(sqrt(n)) + 1):
-      if n % i == 0:
-        n //= i
-        start = i
-        result.append(i)
-        break
-    else:
-      if n > 1:
-        result.append(n)
-        break
-  return result
 
 
 class PolygonDrawer():
@@ -363,34 +327,16 @@ class LibraryStarGenerator(LibraryIcon):
       "Tips:",
       initialvalue=5,
       minvalue=3,
-    )
-    
-    factorized: list[int] = factors(tips)
-    usable: list[int] = primes[::-1]
-    
-    for factor in factorized:
-      while usable[-1] == factor:
-        usable.pop()
-    
-    some_coprimes: list[int] = [1]
-    if len(usable) >= 1:
-      some_coprimes.append(usable[-1])
-      some_coprimes.append(usable[-1]**2)
-    if len(usable) >= 2:
-      some_coprimes.append(usable[-1] * usable[-2])
-    if len(usable) >= 3:
-      some_coprimes.append(usable[-1] * usable[-3])
-      some_coprimes.append(usable[-2] * usable[-3])
-    
-    some_coprimes = list(filter(lambda n: n<tips-1, some_coprimes))
+    ) or 5
     
     return self.generate_star(
       tips,
       askinteger(
         "Configurate polygon generator",
-        f"Density (Must be coprime with the number of tips ({tips}), and smaller than `tips-1`, such as {some_coprimes}):",
-        initialvalue=some_coprimes[1] if len(some_coprimes) > 1 else 1,
-        minvalue=1,
+        f"Density:",
+        initialvalue=(tips-1)//2,
+        minvalue=2,
+        maxvalue=(tips-1)//2,
       ),
     )
 
