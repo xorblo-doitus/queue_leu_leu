@@ -35,7 +35,7 @@ C           | Toggle chord circles drawing (help for debugging)
 ## While editing polygon
 Button                 | Action
 -----------------------|:-------
-Mouse Left on point    | Move point.
+Mouse Left on point    | Move point
 Mouse Left on segment  | Add a point to break this segment
 Mouse Left on nothing  | Add a point after the last point of the polygon
 Mouse Right            | Remove point
