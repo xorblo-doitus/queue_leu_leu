@@ -489,6 +489,11 @@ class PolygonFollowExample(PolygonFollow):
     if self.growth_mode == GrowthMode.EXPAND_AND_MERGE and self._polygon_drawers:
       self._polygon_drawers.pop(1)
   
+  def check_change(self):
+    if self._editing_polygon:
+      return
+    super().check_change()
+  
   def draw(self, surface: Surface, debug: bool|None = None) -> None:
     if self._editing_polygon:
       self._polygon_editor.draw(surface)
@@ -505,7 +510,6 @@ class PolygonFollowExample(PolygonFollow):
         "Followers  "+str(fsize),
         "Spacing    "+str(self.spacing),
         "Gap        "+str(self.gap),
-        "Rotation≈  "+str(int(self.rotation_deg))+"°",
         "Mode       "+self.growth_mode.name,
       )
       for i, t in enumerate(things):

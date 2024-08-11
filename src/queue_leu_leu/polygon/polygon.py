@@ -108,6 +108,7 @@ class Polygon:
     self._vectors: list[Vector2] = []
     self._growth_vectors: list[Vector2] = []
     self._incircle_radius: float = 1
+    self._check_sum: int = 0
     
     self.bake()
   
@@ -128,6 +129,9 @@ class Polygon:
     self._bake_vectors()
     self._bake_growth_vectors()
     self._bake_incircle()
+    
+    # Used for fast approximative change detection
+    self._check_sum = sum((p.x + p.y for p in self.points))
   
   def _bake_incircle(self):
     self._incircle_radius = sqrt(min(map(lambda v: v.length_squared(), self.project_all_clamped(Vector2())))) if self._vectors else 1
@@ -492,23 +496,21 @@ class PolygonFollow:
     self.spacing: float = spacing
     self.gap: float = gap
     self.polygon: Polygon = polygon
-    self.rotation: float = 0
     self.cross_overlap: bool = cross_overlap
     self.growth_mode: GrowthMode = growth_mode
     
     self._debug_polygons: list[Polygon] = []
-
-  @property
-  def rotation_deg(self) -> float:
-    return self.rotation / pi * 180
-  
-  @rotation_deg.setter
-  def rotation_deg(self, new: float):
-    self.rotation = new / 180 * pi
+    
+    self.__last_gap: float = self.gap
+    self.__last_spacing: float = self.spacing
+    self.__last_total_size: float = 0
+    self.__last_identity: float = 0
+    self.__cross_overlap: bool = cross_overlap
+    self.__last_growth_mode: GrowthMode = growth_mode
 
   def update_pos(self, new_pos: Vector2):
     """Update the position of the leader"""
-    self.adapt() # TODO remove this once the change checking is done
+    self.check_change()
     
     self.leader.pos = new_pos
     
@@ -519,7 +521,6 @@ class PolygonFollow:
     """
     Update follower placement
     """
-    # return
     self.relative_positions.clear()
     self._debug_polygons.clear()
     
@@ -619,6 +620,24 @@ class PolygonFollow:
           last_positions = []
           if self.cross_overlap:
             cached_distance_to_end = to_add[start_i] + self.spacing
+  
+  def check_change(self):
+    total_size = sum(f.size for f in self.followers)
+    if (
+      self.__last_gap != self.gap
+      or self.__last_spacing != self.spacing
+      or self.__last_total_size != total_size
+      or self.__last_identity != self.polygon._check_sum
+      or self.__cross_overlap != self.cross_overlap
+      or self.__last_growth_mode != self.growth_mode
+    ):
+      self.__last_gap = self.gap
+      self.__last_spacing = self.spacing
+      self.__last_total_size = total_size
+      self.__last_identity = self.polygon._check_sum
+      self.__cross_overlap = self.cross_overlap
+      self.__last_growth_mode = self.growth_mode
+      self.adapt()
   
   def add_follower(self, follower: PolygonFollower):
     """Add a new follower"""
