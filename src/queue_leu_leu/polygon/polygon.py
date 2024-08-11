@@ -11,7 +11,7 @@ type Intersection = tuple[int, Vector2, float]
 type Walker = Generator[Vector2|None, tuple[float, float], None]
 type NoCrossOverlapWalker = Generator[Vector2|None, float, None]
 
-# PI2 = pi*2
+
 ANGULAR_REFERENCE = Vector2(1, 0)
 get_absolute_angle_deg = ANGULAR_REFERENCE.angle_to
 
@@ -83,6 +83,7 @@ def intersect_segments(p1: Vector2, p2: Vector2, d1: Vector2, d2: Vector2) -> Ve
     return None
   
   return intersection
+
 
 def Vector2_polar(magnitude: float, angle_rad: float) -> Vector2:
   return magnitude * Vector2(cos(angle_rad), sin(angle_rad))
@@ -619,7 +620,6 @@ class PolygonFollow:
           if self.cross_overlap:
             cached_distance_to_end = to_add[start_i] + self.spacing
   
-
   def add_follower(self, follower: PolygonFollower):
     """Add a new follower"""
     self.followers.append(follower)

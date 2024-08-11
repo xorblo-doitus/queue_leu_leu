@@ -152,20 +152,11 @@ class PolygonDrawer():
     
     pygame.draw.circle(surface, (255, 255, 255), self.position, 3)
     
-    # if draw_growed:
-    #   mp: Vector2 = self.to_local(pygame.mouse.get_pos())
-    #   for i in range(len(self.polygon._vectors)):
-    #     # if point != mp:
-    #     pygame.draw.circle(surface, (255, 255, 100), self.to_global(self.polygon.project(mp, i)), 3)
-    
     for point in global_points:
       pygame.draw.circle(surface, self.color, point, 2)
     
     if len(global_points) >= 2:
       pygame.draw.lines(surface, self.color, True, global_points)
-    
-    # for start, direction in zip(global_points, self.polygon._vectors):
-    #   pygame.draw.line(surface, (0, 0, 255), start, start + direction)
     
     if debug:
       for start, vector in zip(global_points, self.polygon._growth_vectors):
@@ -705,10 +696,9 @@ window = pygame.display.set_mode((500, 500), pygame.RESIZABLE)
 clock = pygame.time.Clock()
 font = pygame.font.SysFont('Consolas', 16)
 
-# poly = PolygonFollowExample(16, 24, Polygon([*map(Vector2, [(-578.0, -207.69630290072004), (-578.0, -404.7175432772935), (-522.1138894472376, -547.5376035787973), (-410.8091964740883, -665.3896314327202), (-207.36601351399574, -714.4966066299838), (-207.36601351399574, -714.4966066299838), (-4.858122220787476, -561.0815374684624), (0.0, -577.6801217228199), (0.0, -577.6801217228199), (-4.858122220787476, -561.0815374684624)])])*0.5, PolygonFollower(Vector2(100, 100), 5))
 poly = PolygonFollowExample(16, 24, Polygon(BUILTIN_POLYGONS["test_angles"].points), PolygonFollower(Vector2(100, 100), 5), False)
 library = Library(poly)
-# library.is_open = True
+
 run = True
 key_debounce: int = 0
 while run:
@@ -752,7 +742,6 @@ while run:
     library.update()
     window.fill(0)
     poly.draw(window)
-    # PolygonDrawer(Polygon([*map(Vector2, [(-578.0, -207.69630290072004), (-578.0, -404.7175432772935), (-522.1138894472376, -547.5376035787973), (-410.8091964740883, -665.3896314327202), (-207.36601351399574, -714.4966066299838), (-207.36601351399574, -714.4966066299838), (-4.858122220787476, -561.0815374684624), (0.0, -577.6801217228199), (0.0, -577.6801217228199), (-4.858122220787476, -561.0815374684624)])]), pygame.mouse.get_pos()).draw(window)
     pygame.display.flip()
 
 pygame.quit()
