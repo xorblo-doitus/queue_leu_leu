@@ -584,7 +584,6 @@ class PolygonFollowExample(PolygonFollow):
     
     elif keys[pygame.K_g]:
       self.growth_mode = GrowthMode((self.growth_mode + 1) % GrowthMode._MODULO)
-      print(self.growth_mode)
       return True
     
     elif keys[pygame.K_d]:
