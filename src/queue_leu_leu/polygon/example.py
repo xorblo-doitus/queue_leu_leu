@@ -53,14 +53,6 @@ BUILTIN_POLYGONS: dict[str, Polygon] = {
     Vector2(100, -44),
     Vector2(89, -10),
     Vector2(69, 19),
-    # Vector2(20, -100),
-    # Vector2(40, -122),
-    # Vector2(70, -124),
-    # Vector2(90, -106),
-    # Vector2(100, -84),
-    # Vector2(100, -49),
-    # Vector2(90, -19),
-    # Vector2(70, 13),
   ]),
   
   "test_align": Polygon([
@@ -118,7 +110,7 @@ BUILTIN_POLYGONS: dict[str, Polygon] = {
   ]),
   
   # Glitchy config:
-  # 36, 28, 37, 12, 51
+  # 36, 28, 37, 12, 51 # Fixed
   "test_cross_overlap": Polygon([
     Vector2(-159, 98),
     Vector2(-159, -101),
