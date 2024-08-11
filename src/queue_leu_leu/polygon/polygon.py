@@ -74,8 +74,6 @@ def intersect_segments(p1: Vector2, p2: Vector2, d1: Vector2, d2: Vector2) -> Ve
   """
   WARNING: Computes intersection for infinite lines.
   WARNING: Return None if there is no intersection or if lines are coincident.
-  Python application of this formula :
-  https://en.wikipedia.org/w/index.php?title=Line%E2%80%93line_intersection&oldid=1229564037#Given_two_points_on_each_line
   """
   intersection = intersect_lines(p1, p2, d1, d2)
   
