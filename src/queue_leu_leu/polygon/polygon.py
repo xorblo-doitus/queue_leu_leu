@@ -407,7 +407,6 @@ class Polygon:
             angle_last_start_new: float = abs(pi - radians(abs(to_start.angle_to(self._vectors[new_segment_i]))))
             distance_last_start = to_start.length()
             sin_next: float = distance_last_start * sin(angle_last_start_new) / wanted_progress
-            # TODO Verify that the right solution is taken between asin and 180-asin
             angle_deviation: float = angle_last_start_new + asin(sin_next)
             new_progress: float = distance_last_start * sin(angle_deviation) / sin_next
             attempt: Vector2 = self.points[new_segment_i] + scale_to_length(self._vectors[new_segment_i], new_progress)
