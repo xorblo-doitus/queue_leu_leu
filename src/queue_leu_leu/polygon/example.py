@@ -267,7 +267,7 @@ class PolygonEditor(PolygonDrawer):
 class LibraryIcon(PolygonDrawer):
   def __init__(self, polygon: Polygon, position: Vector2, color: pygame.Vector3, size: int, name: str) -> None:
     self._size = size
-    self._name = name
+    self._name = name[0].capitalize() + name[1:].replace("_", " ")
     self._icon_position = position
     
     farthest: float = 1
@@ -295,8 +295,8 @@ class LibraryIcon(PolygonDrawer):
 
 
 class LibraryRegularPloygonGenerator(LibraryIcon):
-  def __init__(self, _, position: Vector2, color: pygame.Vector3, size=32, name="*regular polygon") -> None:
-    super().__init__(self.generate_regular_polygon(5), position, color, size, name)
+  def __init__(self, _, position: Vector2, color: pygame.Vector3, size=32, __=None) -> None:
+    super().__init__(self.generate_regular_polygon(5), position, color, size, "regular_polygon")
   
   
   @staticmethod
@@ -313,8 +313,8 @@ class LibraryRegularPloygonGenerator(LibraryIcon):
 
 
 class LibraryStarGenerator(LibraryIcon):
-  def __init__(self, _, position: Vector2, color: pygame.Vector3, size=32, name="*star") -> None:
-    super().__init__(self.generate_star(5, 2), position, color, size, name)
+  def __init__(self, _, position: Vector2, color: pygame.Vector3, size=32, __=None) -> None:
+    super().__init__(self.generate_star(5, 2), position, color, size, "star")
   
   @staticmethod
   def generate_star(tips: int, density: int) -> Polygon:
@@ -347,8 +347,8 @@ class LibraryStarSelfMergeGenerator(LibraryStarGenerator):
 
 
 class LibraryIrregularStarGenerator(LibraryIcon):
-  def __init__(self, _, position: Vector2, color: pygame.Vector3, size=32, name="*star") -> None:
-    super().__init__(self.generate_star(5, 80), position, color, size, name)
+  def __init__(self, _, position: Vector2, color: pygame.Vector3, size=32, __=None) -> None:
+    super().__init__(self.generate_star(5, 80), position, color, size, "star")
   
   @staticmethod
   def generate_star(tips: int, tip_distance: float) -> Polygon:
@@ -376,7 +376,7 @@ class Library():
   def __init__(self, follow: PolygonFollow) -> None:
     self._is_open = False
     self._position = Vector2(10, 10)
-    self._columns: int = 4
+    self._columns: int = 5
     self._window: Window|None = None
     self.icon_size = 128
     self.follow: PolygonFollow = follow
