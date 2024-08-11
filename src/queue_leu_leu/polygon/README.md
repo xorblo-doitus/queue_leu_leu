@@ -31,6 +31,7 @@ Up arrow    | Increase the gap between polygons
 Down arrow  | Decrease the gap between polygons
 S           | Configure sizes of followers
 C           | Toggle chord circles drawing (help for debugging)
+G           | Change growth mode
 
 ## While editing polygon
 Button                 | Action

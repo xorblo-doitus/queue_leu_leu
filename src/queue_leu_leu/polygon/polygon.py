@@ -3,6 +3,8 @@ from types import UnionType
 from pygame import Vector2
 from math import pi, cos, sin, asin, radians, sqrt, isclose
 from typing import Any, Generator, Self, Callable, Sequence
+from enum import IntEnum, auto
+
 
 type HashedVector2 = tuple[float, float]
 type Intersection = tuple[int, Vector2, float]
@@ -86,6 +88,13 @@ def Vector2_polar(magnitude: float, angle_rad: float) -> Vector2:
   return magnitude * Vector2(cos(angle_rad), sin(angle_rad))
 
 
+class GrowthMode(IntEnum):
+  EXPAND_AND_MERGE = 0
+  EXPAND = auto()
+  SCALE_FAST = auto()
+  _MODULO = auto()
+
+
 class Polygon:
   """
   Warning: Make sure to call `bake()` each time `points` are modified.
@@ -167,6 +176,9 @@ class Polygon:
   
   def growed_to_inradius(self, desired_inradius: float) -> "Polygon":
     return self * (desired_inradius / self._incircle_radius)
+  
+  def get_near_far_fast(self) -> tuple[float, float]:
+    return self._incircle_radius, max(p.length() for p in self.points)
   
   def project(self, point: Vector2, segment_i: int) -> Vector2:
     return (point - self.points[segment_i]).project(self._vectors[segment_i]) + self.points[segment_i]
@@ -466,7 +478,7 @@ class PolygonFollower:
 
 
 class PolygonFollow:
-  def __init__(self, spacing: float, gap: float, polygon: Polygon, leader: PolygonFollower, cross_overlap: bool = True):
+  def __init__(self, spacing: float, gap: float, polygon: Polygon, leader: PolygonFollower, cross_overlap: bool = True, growth_mode: GrowthMode = GrowthMode.EXPAND_AND_MERGE):
     """
     :param spacing: distance between followers
     :param gap: minimum distance between rings
@@ -481,8 +493,8 @@ class PolygonFollow:
     self.gap: float = gap
     self.polygon: Polygon = polygon
     self.rotation: float = 0
-    self.prevent_self_including: bool = True
     self.cross_overlap: bool = cross_overlap
+    self.growth_mode: GrowthMode = growth_mode
     
     self._debug_polygons: list[Polygon] = []
 
@@ -530,7 +542,14 @@ class PolygonFollow:
     last_biggest: float = 0
     def get_polygon() -> Polygon:
       if last_growed_polygon:
-        return last_growed_polygon.growed(last_growed_polygon_biggest + self.gap + biggest, self.prevent_self_including)
+        match self.growth_mode:
+          case GrowthMode.EXPAND_AND_MERGE:
+            return last_growed_polygon.growed(last_growed_polygon_biggest + self.gap + biggest, True)
+          case GrowthMode.EXPAND:
+            return last_growed_polygon.growed(last_growed_polygon_biggest + self.gap + biggest, False)
+          case GrowthMode.SCALE_FAST:
+            near, far = last_growed_polygon.get_near_far_fast()
+            return last_growed_polygon.growed_to_inradius(far + last_growed_polygon_biggest + self.gap + biggest)
       else:
         return self.polygon.growed_to_inradius(self.leader.size + self.gap + biggest)
     polygon: Polygon = get_polygon()
@@ -583,8 +602,8 @@ class PolygonFollow:
           polygon,
           polygon.growed(biggest),
         ]
-        if self.prevent_self_including:
-          self._debug_polygons.insert(-2, last_growed_polygon.growed(last_growed_polygon_biggest + self.gap + biggest, self.prevent_self_including) if last_growed_polygon else Polygon())
+        if self.growth_mode == GrowthMode.EXPAND_AND_MERGE:
+          self._debug_polygons.insert(-2, last_growed_polygon.growed(last_growed_polygon_biggest + self.gap + biggest, False) if last_growed_polygon else Polygon())
         
         last_growed_polygon = polygon
         last_growed_polygon_biggest = biggest

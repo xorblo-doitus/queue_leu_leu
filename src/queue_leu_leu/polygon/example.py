@@ -1,6 +1,6 @@
-try: from .polygon import PolygonFollow, PolygonFollower, Polygon
+try: from .polygon import PolygonFollow, PolygonFollower, Polygon, GrowthMode
 except ImportError:
-  from polygon import PolygonFollow, PolygonFollower, Polygon
+  from polygon import PolygonFollow, PolygonFollower, Polygon, GrowthMode
 import pygame, random
 from pygame import Vector2, Surface
 from pygame._sdl2.video import Window, Renderer, Texture
@@ -466,14 +466,14 @@ class PolygonFollowExample(PolygonFollow):
   def adapt(self):
     super().adapt()
     
-    colors: tuple[int, ...] = (0x995500, 0x990000, 0xffff00, 0x995500) if self.prevent_self_including else (0x995500, 0xffff00, 0x995500)
+    colors: tuple[int, ...] = (0x995500, 0x990000, 0xffff00, 0x995500) if self.growth_mode == GrowthMode.EXPAND_AND_MERGE else (0x995500, 0xffff00, 0x995500)
     
     self._polygon_drawers = [
       PolygonDrawer(polygon, self.leader.pos, colors[i%len(colors)])
       for i, polygon in enumerate(self._debug_polygons)
     ]
     
-    if self.prevent_self_including and self._polygon_drawers:
+    if self.growth_mode == GrowthMode.EXPAND_AND_MERGE and self._polygon_drawers:
       self._polygon_drawers.pop(1)
   
   def draw(self, surface: Surface, debug: bool|None = None) -> None:
@@ -493,6 +493,7 @@ class PolygonFollowExample(PolygonFollow):
         "Spacing    "+str(self.spacing),
         "Gap        "+str(self.gap),
         "Rotation≈  "+str(int(self.rotation_deg))+"°",
+        "Mode       "+self.growth_mode.name,
       )
       for i, t in enumerate(things):
         surface.blit(font.render(t, False, 0xffffffff), (10, 10+20*i))
@@ -547,34 +548,43 @@ class PolygonFollowExample(PolygonFollow):
       return self.handle_keyboard_editing(keys)
     
     if keys[pygame.K_RETURN]:
-      poly.add_follower(PolygonFollower(Vector2(100, 100), random.randint(6, 60)))
+      self.add_follower(PolygonFollower(Vector2(100, 100), random.randint(6, 60)))
       return True
 
     elif keys[pygame.K_BACKSPACE]:
-      if poly.followers:
-        poly.pop_follower(random.randint(0, len(poly.followers)-1))
+      if self.followers:
+        self.pop_follower(random.randint(0, len(self.followers)-1))
       return True
 
     elif keys[pygame.K_r]:
       range_: tuple[int, int] = (4, 8) if keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT] else (6, 60)
-      for f in poly.followers:
+      for f in self.followers:
         f.size = random.randint(*range_)
       return True
 
     elif keys[pygame.K_EQUALS]:
-      poly.spacing += 1
+      self.spacing += 1
       return True
 
     elif keys[pygame.K_6]:
-      poly.spacing -= 1
+      self.spacing -= 1
       return True
 
     elif keys[pygame.K_UP]:
-      poly.gap += 1
+      self.gap += 1
       return True
 
     elif keys[pygame.K_DOWN]:
-      poly.gap -= 1
+      self.gap -= 1
+      return True
+    
+    elif keys[pygame.K_DOWN]:
+      self.gap -= 1
+      return True
+    
+    elif keys[pygame.K_g]:
+      self.growth_mode = GrowthMode((self.growth_mode + 1) % GrowthMode._MODULO)
+      print(self.growth_mode)
       return True
     
     elif keys[pygame.K_d]:
@@ -658,7 +668,7 @@ class PolygonFollowExample(PolygonFollow):
       self._polygon_editor.handle_mouse_up(event)
 
   def handle_mouse_wheel(self, event) -> None:
-    poly.rotation_deg += event.y * 5
+    self.rotation_deg += event.y * 5
 
 
 pygame.init()
