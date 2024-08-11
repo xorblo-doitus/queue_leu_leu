@@ -265,7 +265,7 @@ class PolygonEditor(PolygonDrawer):
 
 
 class LibraryIcon(PolygonDrawer):
-  def __init__(self, polygon: Polygon, position: Vector2, color: pygame.Vector3, name: str, size = 32) -> None:
+  def __init__(self, polygon: Polygon, position: Vector2, color: pygame.Vector3, size: int, name: str) -> None:
     self._size = size
     self._name = name
     self._icon_position = position
@@ -295,8 +295,8 @@ class LibraryIcon(PolygonDrawer):
 
 
 class LibraryRegularPloygonGenerator(LibraryIcon):
-  def __init__(self, position: Vector2, color: pygame.Vector3, size=32) -> None:
-    super().__init__(self.generate_regular_polygon(5), position, color, "*regular polygon", size)
+  def __init__(self, _, position: Vector2, color: pygame.Vector3, size=32, name="*regular polygon") -> None:
+    super().__init__(self.generate_regular_polygon(5), position, color, size, name)
   
   
   @staticmethod
@@ -313,8 +313,8 @@ class LibraryRegularPloygonGenerator(LibraryIcon):
 
 
 class LibraryStarGenerator(LibraryIcon):
-  def __init__(self, position: Vector2, color: pygame.Vector3, size=32) -> None:
-    super().__init__(self.generate_star(5, 2), position, color, "*star", size)
+  def __init__(self, _, position: Vector2, color: pygame.Vector3, size=32, name="*star") -> None:
+    super().__init__(self.generate_star(5, 2), position, color, size, name)
   
   @staticmethod
   def generate_star(tips: int, density: int) -> Polygon:
@@ -381,25 +381,17 @@ class Library():
       if not self.debug:
         to_draw = filter(lambda e: not e[0].starts_with("test_"), to_draw)
       
-      for i, name in enumerate(to_draw):
-        polygon = BUILTIN_POLYGONS[name]
-        position = self.i_to_pos(i)
-        # print(pygame.Rect(position.x - self.icon_size//2, position.x - self.icon_size//2, self.icon_size, self.icon_size))
-        # pygame.draw.rect(
-        #   self._surface,
-        #   0xffffff,
-        #   pygame.Rect(position.x - self.icon_size//2, position.x - self.icon_size//2, self.icon_size, self.icon_size),
-        #   1,
-        # )
-        self._icons.append(LibraryIcon(polygon, position, 0xff00ff if name.startswith("test_") else 0xffff00, name.removeprefix("test_"), self.icon_size))
-        self._icons[-1].draw(self._surface, False, False)
+      for name in to_draw:
+        self.add_icon(
+          LibraryIcon,
+          0xff00ff if name.startswith("test_") else 0xffff00,
+          name.removeprefix("test_"),
+          BUILTIN_POLYGONS[name]
+        )
       
-      self._icons.append(LibraryRegularPloygonGenerator(self.i_to_pos(len(self._icons)), 0x00ff00, self.icon_size))
-      self._icons[-1].draw(self._surface, False, False)
-      self._icons.append(LibraryStarGenerator(self.i_to_pos(len(self._icons)), 0x00ff00, self.icon_size))
-      self._icons[-1].draw(self._surface, False, False)
-      self._icons.append(LibraryStarSelfMergeGenerator(self.i_to_pos(len(self._icons)), 0x00ff00, self.icon_size))
-      self._icons[-1].draw(self._surface, False, False)
+      self.add_icon(LibraryRegularPloygonGenerator, 0x00ff00)
+      self.add_icon(LibraryStarGenerator, 0x00ff00)
+      self.add_icon(LibraryStarSelfMergeGenerator, 0x00ff00)
       
       self._texture.update(self._surface)
       self._texture.draw()
@@ -438,6 +430,10 @@ class Library():
   
   def i_to_pos(self, i: int) -> Vector2:
     return Vector2(self.icon_size * (i%self._columns), self.icon_size * (i//self._columns)) + self._position
+  
+  def add_icon(self, class_: type[LibraryIcon], color, name=None, polygon=None):
+    self._icons.append(class_(polygon, self.i_to_pos(len(self._icons)), color, self.icon_size, name))
+    self._icons[-1].draw(self._surface, False, False)
   
   def selected(self):
     if self._hovered == -1:
