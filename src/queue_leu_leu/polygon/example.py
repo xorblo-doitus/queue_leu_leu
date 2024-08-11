@@ -336,7 +336,7 @@ class LibraryStarGenerator(LibraryIcon):
         initialvalue=(tips-1)//2,
         minvalue=2,
         maxvalue=(tips-1)//2,
-      ),
+      ) or 2,
     )
 
 
@@ -344,6 +344,32 @@ class LibraryStarSelfMergeGenerator(LibraryStarGenerator):
   @staticmethod
   def generate_star(tips: int, density: int) -> Polygon:
     return super(__class__, __class__).generate_star(tips, density).merge_self_contained()
+
+
+class LibraryIrregularStarGenerator(LibraryIcon):
+  def __init__(self, _, position: Vector2, color: pygame.Vector3, size=32, name="*star") -> None:
+    super().__init__(self.generate_star(5, 80), position, color, size, name)
+  
+  @staticmethod
+  def generate_star(tips: int, tip_distance: float) -> Polygon:
+    return Polygon([Vector2.from_polar((100 if i%2 else 100 + tip_distance, i*180/tips)) for i in range(tips*2)])
+  
+  def get_result(self) -> Polygon:
+    tips = askinteger(
+      "Configurate polygon generator",
+      "Tips:",
+      initialvalue=5,
+      minvalue=3,
+    ) or 5
+    
+    return self.generate_star(
+      tips,
+      askinteger(
+        "Configurate polygon generator",
+        f"Tip distance:",
+        initialvalue=80,
+      ) or 100,
+    )
 
 
 class Library():
@@ -392,6 +418,7 @@ class Library():
       self.add_icon(LibraryRegularPloygonGenerator, 0x00ff00)
       self.add_icon(LibraryStarGenerator, 0x00ff00)
       self.add_icon(LibraryStarSelfMergeGenerator, 0x00ff00)
+      self.add_icon(LibraryIrregularStarGenerator, 0x00ff00)
       
       self._texture.update(self._surface)
       self._texture.draw()
