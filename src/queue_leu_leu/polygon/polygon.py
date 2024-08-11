@@ -528,7 +528,12 @@ class PolygonFollow:
     # Polygon specific variables
     biggest: float = to_add[0]
     last_biggest: float = 0
-    polygon: Polygon = last_growed_polygon.growed(last_growed_polygon_biggest + self.gap + biggest, self.prevent_self_including) if last_growed_polygon else self.polygon.growed_to_inradius(self.leader.size + self.gap + biggest)
+    def get_polygon() -> Polygon:
+      if last_growed_polygon:
+        return last_growed_polygon.growed(last_growed_polygon_biggest + self.gap + biggest, self.prevent_self_including)
+      else:
+        return self.polygon.growed_to_inradius(self.leader.size + self.gap + biggest)
+    polygon: Polygon = get_polygon()
     walker: Walker|NoCrossOverlapWalker = polygon.walk() if self.cross_overlap else polygon.walk_no_cross_overlap(self.spacing, to_add[start_i])
     positions: list[Vector2] = [next(walker)]
     last_positions: list[Vector2] = []
@@ -544,7 +549,7 @@ class PolygonFollow:
         last_biggest = biggest
         last_positions = positions
         biggest = size
-        polygon = last_growed_polygon.growed(last_growed_polygon_biggest + self.gap + biggest, self.prevent_self_including) if last_growed_polygon else self.polygon.growed_to_inradius(self.leader.size + self.gap + biggest)
+        polygon = get_polygon()
         walker, positions = polygon.bulk_walk(chords[start_i:end_i-1], (cached_distance_to_end + to_add[i] for i in range(start_i, end_i))) if self.cross_overlap else polygon.bulk_walk_no_cross_overlap(self.spacing, to_add[start_i:end_i])
         # Depending on the polygon, a grown version can fit less of the same followers
         if positions[-1] is None:
@@ -565,7 +570,7 @@ class PolygonFollow:
           if overfits == "growth":
             biggest = last_biggest
             positions = last_positions
-            polygon = last_growed_polygon.growed(last_growed_polygon_biggest + self.gap + biggest, self.prevent_self_including) if last_growed_polygon else self.polygon.growed_to_inradius(self.leader.size + self.gap + biggest)
+            polygon = get_polygon()
           else:
             positions.pop()
           
@@ -589,7 +594,7 @@ class PolygonFollow:
         if start_i < len(to_add):
           biggest = to_add[start_i]
           last_biggest = 0
-          polygon = last_growed_polygon.growed(last_growed_polygon_biggest + self.gap + biggest, self.prevent_self_including) if last_growed_polygon else self.polygon.growed_to_inradius(self.leader.size + self.gap + biggest)
+          polygon = get_polygon()
           walker = polygon.walk() if self.cross_overlap else polygon.walk_no_cross_overlap(self.spacing, to_add[start_i])
           positions = [next(walker)]
           last_positions = []
