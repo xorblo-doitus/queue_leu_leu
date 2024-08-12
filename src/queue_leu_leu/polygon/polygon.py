@@ -83,10 +83,6 @@ def intersect_segments(p1: Vector2, p2: Vector2, d1: Vector2, d2: Vector2) -> Ve
   return intersection
 
 
-def Vector2_polar(magnitude: float, angle_rad: float) -> Vector2:
-  return magnitude * Vector2(cos(angle_rad), sin(angle_rad))
-
-
 class GrowthMode(IntEnum):
   EXPAND_AND_MERGE = 0
   EXPAND = auto()
