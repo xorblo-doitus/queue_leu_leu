@@ -143,9 +143,17 @@ class ArcFollow:
           ring.radius = new_radius
         
         # Choose repartition
-        ring.angles = [(self.max_angle - angle) / 2 + advance_on_circle(ring.radius, to_add[start_i])]
-        for i in range(start_i, end_i):
-          ring.angles.append(ring.angles[-1] + advance_on_circle(ring.radius, chords[i]))
+        if end_i == start_i:
+          ring.angles = [self.max_angle/2]
+        elif self.uniform:
+          extra = (self.max_angle - angle) / (end_i - start_i)
+          ring.angles = [get_edge_angle(new_radius, to_add[start_i])]
+          for i in range(start_i, end_i):
+            ring.angles.append(ring.angles[-1] + extra + advance_on_circle(ring.radius, chords[i]))
+        else:
+          ring.angles = [(self.max_angle - angle) / 2 + advance_on_circle(ring.radius, to_add[start_i])]
+          for i in range(start_i, end_i):
+            ring.angles.append(ring.angles[-1] + advance_on_circle(ring.radius, chords[i]))
         
         # Progress
         total_radius = ring.radius + biggest + self.gap
