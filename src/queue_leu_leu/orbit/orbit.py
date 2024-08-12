@@ -248,7 +248,7 @@ class OrbitFollow:
 
   def check_rings(self):
     """Recalculate the rings if .gap, .spacing or a follower size has been changed"""
-    total = sum(map(lambda f: f.size, self.followers))
+    total = sum(f.size for f in self.followers)
     if (self.gap != self.__last_gap or 
         self.spacing != self.__last_spacing or 
         total != self.__total_size

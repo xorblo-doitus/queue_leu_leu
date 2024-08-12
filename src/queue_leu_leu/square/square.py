@@ -102,7 +102,7 @@ class SquareFollow:
   
   def check_rings(self):
     """Recalculate the rings if .radius, .distance or a follower size has been changed"""
-    total = sum(map(lambda f: f.size, self.followers))
+    total = sum(f.size for f in self.followers)
     if (self.radius != self.__radius.x or 
         self.distance != self.__last_distance or 
         total != self.__total_size

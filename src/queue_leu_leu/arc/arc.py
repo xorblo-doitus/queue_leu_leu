@@ -171,7 +171,7 @@ class ArcFollow:
   
   def check_rings(self):
     """Recalculate the rings if .max_angle, .gap, .spacing or a follower size has been changed"""
-    total = sum(map(lambda f: f.size, self.followers))
+    total = sum(f.size for f in self.followers)
     if (self.max_angle != self.__last_max_angle or
         self.gap != self.__last_gap or 
         self.spacing != self.__last_spacing or 

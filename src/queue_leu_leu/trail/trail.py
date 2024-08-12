@@ -85,7 +85,7 @@ class TrailFollow:
 
   def check_trail(self):
     """Recalculate the trail if .distance or a follower size has been changed"""
-    total = sum(map(lambda f: f.size, self.followers))
+    total = sum(f.size for f in self.followers)
     if self.get_distance() != self.__last_distance or total != self.__total_size:
       self.__last_distance = self.get_distance()
       self.__total_size = total
