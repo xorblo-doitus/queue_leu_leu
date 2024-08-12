@@ -30,25 +30,25 @@ class TrailFollowExample(TrailFollow):
 
   def handle_keyboard(self, keys):
     if keys[pygame.K_RETURN]:
-      trail.add_follower(TrailFollowElement(pygame.Vector2(100, 100), random.randint(6, 60)))
+      self.add_follower(TrailFollowElement(pygame.Vector2(100, 100), random.randint(6, 60)))
       return True
 
     elif keys[pygame.K_BACKSPACE]:
-      if trail.followers:
-        trail.pop_follower(random.randint(0, len(trail.followers)-1))
+      if self.followers:
+        self.pop_follower(random.randint(0, len(self.followers)-1))
       return True
 
     elif keys[pygame.K_RSHIFT]:
-      for f in trail.followers:
+      for f in self.followers:
         f.size = random.randint(6, 60)
       return True
 
     elif keys[pygame.K_EQUALS]:
-      trail.distance += 1
+      self.distance += 1
       return True
 
     elif keys[pygame.K_6]:
-      trail.distance -= 1
+      self.distance -= 1
       return True
 
     return False

@@ -47,57 +47,57 @@ class ArcFollowExample(ArcFollow):
 
   def handle_keyboard(self, keys):
     if keys[pygame.K_RETURN]:
-      arc.add_follower(ArcFollowElement(pygame.Vector2(100, 100), random.randint(6, 60)))
+      self.add_follower(ArcFollowElement(pygame.Vector2(100, 100), random.randint(6, 60)))
       return True
 
     elif keys[pygame.K_BACKSPACE]:
-      if arc.followers:
-        arc.pop_follower(random.randint(0, len(arc.followers)-1))
+      if self.followers:
+        self.pop_follower(random.randint(0, len(self.followers)-1))
       return True
 
     elif keys[pygame.K_RSHIFT]:
-      for f in arc.followers:
+      for f in self.followers:
         f.size = random.randint(6, 60)
       return True
 
     elif keys[pygame.K_EQUALS]:
-      arc.spacing += 1
+      self.spacing += 1
       return True
 
     elif keys[pygame.K_6]:
-      arc.spacing -= 1
+      self.spacing -= 1
       return True
 
     elif keys[pygame.K_UP]:
-      arc.gap += 1
+      self.gap += 1
       return True
 
     elif keys[pygame.K_DOWN]:
-      arc.gap -= 1
+      self.gap -= 1
       return True
 
     elif keys[pygame.K_RIGHT]:
-      arc.max_angle_deg += 5
+      self.max_angle_deg += 5
       return True
     
     elif keys[pygame.K_LEFT]:
-      arc.max_angle_deg -= 5
+      self.max_angle_deg -= 5
       return True
     
     elif keys[pygame.K_u]:
-      arc.uniform = not arc.uniform
-      arc.adapt_rings()
+      self.uniform = not self.uniform
+      self.adapt_rings()
       return True
     
     elif keys[pygame.K_s]:
-      arc.strong = not arc.strong
-      arc.adapt_rings()
+      self.strong = not self.strong
+      self.adapt_rings()
       return True
 
     return False
 
   def handle_mouse(self, event):
-    arc.rotation_deg += event.y * 5
+    self.rotation_deg += event.y * 5
 
 
 pygame.init()

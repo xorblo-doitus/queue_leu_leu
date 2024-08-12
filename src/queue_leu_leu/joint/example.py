@@ -29,25 +29,25 @@ class JointFollowExample(JointFollow):
 
   def handle_keyboard(self, keys):
     if keys[pygame.K_RETURN]:
-      joint.add_follower(JointFollowElement(pygame.Vector2(100, 100), random.randint(6, 60)))
+      self.add_follower(JointFollowElement(pygame.Vector2(100, 100), random.randint(6, 60)))
       return True
 
     elif keys[pygame.K_BACKSPACE]:
-      if joint.followers:
-        joint.pop_follower(random.randint(0, len(joint.followers)-1))
+      if self.followers:
+        self.pop_follower(random.randint(0, len(self.followers)-1))
       return True
 
     elif keys[pygame.K_RSHIFT]:
-      for f in joint.followers:
+      for f in self.followers:
         f.size = random.randint(6, 60)
       return True
 
     elif keys[pygame.K_EQUALS]:
-      joint.distance += 1
+      self.distance += 1
       return True
 
     elif keys[pygame.K_6]:
-      joint.distance -= 1
+      self.distance -= 1
       return True
 
     return False

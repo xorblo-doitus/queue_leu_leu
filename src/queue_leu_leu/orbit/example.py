@@ -44,46 +44,46 @@ class OrbitFollowExample(OrbitFollow):
 
   def handle_keyboard(self, keys):
     if keys[pygame.K_RETURN]:
-      orbit.add_follower(OrbitFollowElement(pygame.Vector2(100, 100), random.randint(6, 60)))
+      self.add_follower(OrbitFollowElement(pygame.Vector2(100, 100), random.randint(6, 60)))
       return True
 
     elif keys[pygame.K_BACKSPACE]:
-      if orbit.followers:
-        orbit.pop_follower(random.randint(0, len(orbit.followers)-1))
+      if self.followers:
+        self.pop_follower(random.randint(0, len(self.followers)-1))
       return True
 
     elif keys[pygame.K_RSHIFT]:
-      for f in orbit.followers:
+      for f in self.followers:
         f.size = random.randint(6, 60)
       return True
 
     elif keys[pygame.K_EQUALS]:
-      orbit.spacing += 1
+      self.spacing += 1
       return True
 
     elif keys[pygame.K_6]:
-      orbit.spacing -= 1
+      self.spacing -= 1
       return True
 
     elif keys[pygame.K_UP]:
-      orbit.speed += 2
+      self.speed += 2
       return True
 
     elif keys[pygame.K_DOWN]:
-      orbit.speed -= 2
+      self.speed -= 2
       return True
 
     elif keys[pygame.K_RIGHT]:
-      orbit.gap += 2
+      self.gap += 2
       return True
     
     elif keys[pygame.K_LEFT]:
-      orbit.gap -= 2
+      self.gap -= 2
       return True
     
     elif keys[pygame.K_m]:
-      orbit.adapt_rings = OrbitFollowExample.adpaters[OrbitFollowExample.adpaters.index(orbit.adapt_rings.__func__) - 1].__get__(orbit, OrbitFollowExample)
-      orbit.adapt_rings()
+      self.adapt_rings = OrbitFollowExample.adpaters[OrbitFollowExample.adpaters.index(self.adapt_rings.__func__) - 1].__get__(self, OrbitFollowExample)
+      self.adapt_rings()
       return True
 
     return False

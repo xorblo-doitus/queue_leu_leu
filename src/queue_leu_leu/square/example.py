@@ -32,41 +32,41 @@ class SquareFollowExample(SquareFollow):
 
   def handle_keyboard(self, keys):
     if keys[pygame.K_RETURN]:
-      square.add_follower(SquareFollowElement(pygame.Vector2(100, 100), random.randint(6, 60)))
+      self.add_follower(SquareFollowElement(pygame.Vector2(100, 100), random.randint(6, 60)))
       return True
 
     elif keys[pygame.K_BACKSPACE]:
-      if square.followers:
-        square.pop_follower(random.randint(0, len(square.followers)-1))
+      if self.followers:
+        self.pop_follower(random.randint(0, len(self.followers)-1))
       return True
 
     elif keys[pygame.K_RSHIFT]:
-      for f in square.followers:
+      for f in self.followers:
         f.size = random.randint(6, 60)
       return True
 
     elif keys[pygame.K_EQUALS]:
-      square.distance += 1
+      self.distance += 1
       return True
 
     elif keys[pygame.K_6]:
-      square.distance -= 1
+      self.distance -= 1
       return True
 
     elif keys[pygame.K_UP]:
-      square.speed += 1
+      self.speed += 1
       return True
 
     elif keys[pygame.K_DOWN]:
-      square.speed -= 1
+      self.speed -= 1
       return True
 
     elif keys[pygame.K_RIGHT]:
-      square.radius += 1
+      self.radius += 1
       return True
     
     elif keys[pygame.K_LEFT]:
-      square.radius -= 1
+      self.radius -= 1
       return True
 
     return False
