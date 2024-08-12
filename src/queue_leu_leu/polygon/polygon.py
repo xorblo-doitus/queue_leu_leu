@@ -103,7 +103,7 @@ class Polygon:
   def __init__(self, points: list[Vector2] = []) -> None:
     self.points: list[Vector2] = points
     
-    self._vectors: list[Vector2] = []
+    self._segments: list[Vector2] = []
     self._growth_vectors: list[Vector2] = []
     self._incircle_radius: float = 1
     self._check_sum: int = 0
@@ -113,7 +113,7 @@ class Polygon:
   @property
   def vectors(self) -> list[Vector2]:
     """Read-only: The vector at index i is the translation from point i to point i+1"""
-    return self._vectors
+    return self._segments
   
   def bake(self) -> None:
     """
@@ -124,7 +124,7 @@ class Polygon:
     if len(self.points) >= 2:
       self.points = [point for point, next_ in zip(self.points, self.points[1:] + [self.points[0]]) if point != next_]
       
-    self._bake_vectors()
+    self._bake_segments()
     self._bake_growth_vectors()
     self._bake_incircle()
     
@@ -132,13 +132,13 @@ class Polygon:
     self._check_sum = sum(p.x + p.y for p in self.points)
   
   def _bake_incircle(self):
-    self._incircle_radius = sqrt(min(map(lambda v: v.length_squared(), self.project_all_clamped(Vector2())))) if self._vectors else 1
+    self._incircle_radius = sqrt(min(map(lambda v: v.length_squared(), self.project_all_clamped(Vector2())))) if self._segments else 1
   
-  def _bake_vectors(self) -> None:
+  def _bake_segments(self) -> None:
     if len(self.points) >= 2:
-      self._vectors = [end - start for start, end in zip(self.points, self.points[1:] + [self.points[0]])]
+      self._segments = [end - start for start, end in zip(self.points, self.points[1:] + [self.points[0]])]
     else:
-      self._vectors = []
+      self._segments = []
   
   def _bake_growth_vectors(self) -> None:
     if len(self.points) < 3:
@@ -147,7 +147,7 @@ class Polygon:
     
     new_growth_vectors: list[Vector2] = []
     
-    for before, after in zip([self._vectors[-1]] + self._vectors, self._vectors):
+    for before, after in zip([self._segments[-1]] + self._segments, self._segments):
       mean: Vector2 = before.normalize() + after.normalize()
       if mean:
           direction: Vector2 = mean.normalize().rotate(-90)
@@ -184,7 +184,7 @@ class Polygon:
     return self._incircle_radius, max(p.length() for p in self.points)
   
   def project(self, point: Vector2, segment_i: int) -> Vector2:
-    return (point - self.points[segment_i]).project(self._vectors[segment_i]) + self.points[segment_i]
+    return (point - self.points[segment_i]).project(self._segments[segment_i]) + self.points[segment_i]
   
   def project_clamped(self, point: Vector2, segment_i: int) -> Vector2:
     projection: Vector2 = self.project(point, segment_i)
@@ -198,15 +198,15 @@ class Polygon:
     return projection
   
   def project_all(self, point: Vector2) -> list[Vector2]:
-    return [self.project(point, i) for i in range(len(self._vectors))]
+    return [self.project(point, i) for i in range(len(self._segments))]
   
   def project_all_clamped(self, point: Vector2) -> list[Vector2]:
-    return [self.project_clamped(point, i) for i in range(len(self._vectors))]
+    return [self.project_clamped(point, i) for i in range(len(self._segments))]
   
   def get_segment_progress(self, point: Vector2, segment_i: int) -> float:
     """Assumes point lies on the segment"""
     relative_to_start: Vector2 = point - self.points[segment_i]
-    return relative_to_start.x / self._vectors[segment_i].x if self._vectors[segment_i].x else relative_to_start.y / self._vectors[segment_i].y
+    return relative_to_start.x / self._segments[segment_i].x if self._segments[segment_i].x else relative_to_start.y / self._segments[segment_i].y
   
   def merge_self_contained(self) -> Self:
     cached_len: int = len(self.points)
@@ -258,7 +258,7 @@ class Polygon:
       yield None
     
     segment_i: int = 0
-    segment: Vector2 = self._vectors[segment_i]
+    segment: Vector2 = self._segments[segment_i]
     segment_progress: float = 0
     segment_length: float = segment.length()
     last_pos: Vector2 = self.points[0]
@@ -270,10 +270,10 @@ class Polygon:
           segment_progress += wanted_progress
           if segment_progress == segment_length:
             segment_i += 1
-            if segment_i >= len(self._vectors):
+            if segment_i >= len(self._segments):
               yield None
               return
-            segment = self._vectors[segment_i]
+            segment = self._segments[segment_i]
             segment_length = segment.length()
             segment_progress = 0
             last_pos = self.points[segment_i]
@@ -282,8 +282,8 @@ class Polygon:
       else:
         new_segment_i: int = segment_i + 1
         result: None|Vector2 = None
-        while new_segment_i < len(self._vectors):
-          angle_to_next: float = radians(self._vectors[new_segment_i].angle_to(segment))
+        while new_segment_i < len(self._segments):
+          angle_to_next: float = radians(self._segments[new_segment_i].angle_to(segment))
           if abs(angle_to_next%pi) <= 1e-6:
             extend_from = self.project(last_pos, new_segment_i)
             extend_by = wanted_progress * cos(asin((extend_from - last_pos).length()/wanted_progress))
@@ -303,19 +303,19 @@ class Polygon:
                 break
           else:
             to_start: Vector2 = self.points[new_segment_i] - last_pos
-            angle_last_start_new: float = abs(pi - radians(abs(to_start.angle_to(self._vectors[new_segment_i]))))
+            angle_last_start_new: float = abs(pi - radians(abs(to_start.angle_to(self._segments[new_segment_i]))))
             distance_last_start = to_start.length()
             sin_next: float = distance_last_start * sin(angle_last_start_new) / wanted_progress
             angle_deviation: float = angle_last_start_new + asin(sin_next)
             new_progress: float = distance_last_start * sin(angle_deviation) / sin_next
-            attempt: Vector2 = self.points[new_segment_i] + scale_to_length(self._vectors[new_segment_i], new_progress)
+            attempt: Vector2 = self.points[new_segment_i] + scale_to_length(self._segments[new_segment_i], new_progress)
             if 0 <= self.get_segment_progress(attempt, new_segment_i) <= 1:
               result = attempt
               segment_progress = new_progress
           
           if result is not None: # Warning: Do not check falsy as Vector can be (0, 0)
             segment_i = new_segment_i
-            segment = self._vectors[segment_i]
+            segment = self._segments[segment_i]
             segment_length = segment.length()
             last_pos = result
             break
@@ -333,7 +333,7 @@ class Polygon:
         reversed_walker.send(None)
         reversed_walker.send((distance_to_end, -1))
         _locals = reversed_walker.gi_frame.f_locals
-        reversed_seg_i: int = len(self._vectors) - _locals["segment_i"] - 1
+        reversed_seg_i: int = len(self._segments) - _locals["segment_i"] - 1
         if reversed_seg_i < segment_i or (
           reversed_seg_i == segment_i and segment_length - _locals["segment_progress"] < segment_progress
         ):
@@ -358,7 +358,7 @@ class Polygon:
       yield None
     
     segment_i: int = 0
-    segment: Vector2 = self._vectors[segment_i]
+    segment: Vector2 = self._segments[segment_i]
     segment_progress: float = 0
     segment_length: float = segment.length()
     positions: list[Vector2] = [self.points[0]]
@@ -371,10 +371,10 @@ class Polygon:
           segment_progress += wanted_progress
           if segment_progress == segment_length:
             segment_i += 1
-            if segment_i >= len(self._vectors):
+            if segment_i >= len(self._segments):
               yield None
               return
-            segment = self._vectors[segment_i]
+            segment = self._segments[segment_i]
             segment_length = segment.length()
             segment_progress = 0
             positions.append(self.points[segment_i])
@@ -386,9 +386,9 @@ class Polygon:
         else:
           new_segment_i = segment_i
         result: None|Vector2 = None
-        while new_segment_i < len(self._vectors):
+        while new_segment_i < len(self._segments):
           to_start: Vector2 = self.points[new_segment_i] - positions[space_from]
-          angle_to_next: float = radians(self._vectors[new_segment_i].angle_to(to_start))
+          angle_to_next: float = radians(self._segments[new_segment_i].angle_to(to_start))
           if abs(angle_to_next%pi) <= 1e-6:
             extend_from = self.project(positions[space_from], new_segment_i)
             extend_by = wanted_progress * cos(asin((extend_from - positions[space_from]).length()/wanted_progress))
@@ -407,19 +407,19 @@ class Polygon:
                 segment_progress = (result - self.points[new_segment_i]).length()
                 break
           else:
-            angle_last_start_new: float = abs(pi - radians(abs(to_start.angle_to(self._vectors[new_segment_i]))))
+            angle_last_start_new: float = abs(pi - radians(abs(to_start.angle_to(self._segments[new_segment_i]))))
             distance_last_start = to_start.length()
             sin_next: float = distance_last_start * sin(angle_last_start_new) / wanted_progress
             angle_deviation: float = angle_last_start_new + asin(sin_next)
             new_progress: float = distance_last_start * sin(angle_deviation) / sin_next
-            attempt: Vector2 = self.points[new_segment_i] + scale_to_length(self._vectors[new_segment_i], new_progress)
+            attempt: Vector2 = self.points[new_segment_i] + scale_to_length(self._segments[new_segment_i], new_progress)
             if 0 <= self.get_segment_progress(attempt, new_segment_i) <= 1:
               result = attempt
               segment_progress = new_progress
           
           if result is not None: # Warning: Do not check falsy as Vector can be (0, 0)
             segment_i = new_segment_i
-            segment = self._vectors[segment_i]
+            segment = self._segments[segment_i]
             segment_length = segment.length()
             positions.append(result)
             break

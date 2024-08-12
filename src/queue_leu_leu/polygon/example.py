@@ -199,7 +199,7 @@ class PolygonEditor(PolygonDrawer):
           self.dragging_i = point_i
           return
         
-        if self.polygon._vectors:
+        if self.polygon._segments:
           projections: dict[int, Vector2] = {
             i: projection
             for i, projection in enumerate(self.polygon.project_all(local_pos))
