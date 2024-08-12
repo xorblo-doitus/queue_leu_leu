@@ -2,7 +2,7 @@
 from types import UnionType
 from pygame import Vector2
 from math import pi, cos, sin, asin, radians, sqrt, isclose
-from typing import Any, Generator, Self, Callable, Sequence
+from typing import Generator, Self, Callable, Sequence
 from enum import IntEnum, auto
 
 
