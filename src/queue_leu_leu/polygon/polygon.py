@@ -129,7 +129,7 @@ class Polygon:
     self._bake_incircle()
     
     # Used for fast approximative change detection
-    self._check_sum = sum((p.x + p.y for p in self.points))
+    self._check_sum = sum(p.x + p.y for p in self.points)
   
   def _bake_incircle(self):
     self._incircle_radius = sqrt(min(map(lambda v: v.length_squared(), self.project_all_clamped(Vector2())))) if self._vectors else 1
