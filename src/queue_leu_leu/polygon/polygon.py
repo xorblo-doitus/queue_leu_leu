@@ -102,7 +102,7 @@ class Polygon:
     self._segments: list[Vector2] = []
     self._growth_vectors: list[Vector2] = []
     self._incircle_radius: float = 1
-    self._check_sum: int = 0
+    self._checksum: int = 0
     
     self.bake()
   
@@ -125,7 +125,7 @@ class Polygon:
     self._bake_incircle()
     
     # Used for fast approximative change detection
-    self._check_sum = sum(p.x + p.y for p in self.points)
+    self._checksum = sum(p.x + p.y for p in self.points)
   
   def _bake_incircle(self):
     self._incircle_radius = sqrt(min(map(lambda v: v.length_squared(), self.project_all_clamped(Vector2())))) if self._segments else 1
@@ -497,8 +497,8 @@ class PolygonFollow:
     
     self.__last_gap: float = self.gap
     self.__last_spacing: float = self.spacing
-    self.__last_total_size: float = 0
-    self.__last_identity: float = 0
+    self.__last_size_checksum: float = 0
+    self.__last_polygon_checksum: float = 0
     self.__cross_overlap: bool = cross_overlap
     self.__last_growth_mode: GrowthMode = growth_mode
 
@@ -616,19 +616,19 @@ class PolygonFollow:
             cached_distance_to_end = to_add[start_i] + self.spacing
   
   def check_change(self):
-    total_size = sum(f.size for f in self.followers)
+    size_checksum = sum(f.size for f in self.followers)
     if (
       self.__last_gap != self.gap
       or self.__last_spacing != self.spacing
-      or self.__last_total_size != total_size
-      or self.__last_identity != self.polygon._check_sum
+      or self.__last_size_checksum != size_checksum
+      or self.__last_polygon_checksum != self.polygon._checksum
       or self.__cross_overlap != self.cross_overlap
       or self.__last_growth_mode != self.growth_mode
     ):
       self.__last_gap = self.gap
       self.__last_spacing = self.spacing
-      self.__last_total_size = total_size
-      self.__last_identity = self.polygon._check_sum
+      self.__last_size_checksum = size_checksum
+      self.__last_polygon_checksum = self.polygon._checksum
       self.__cross_overlap = self.cross_overlap
       self.__last_growth_mode = self.growth_mode
       self.adapt()
