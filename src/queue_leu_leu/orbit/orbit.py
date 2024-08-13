@@ -2,11 +2,11 @@
 from pygame import Vector2
 import math
 
+
 SPEED_SCALE = 1 / 8
-PI2 = 2 * math.pi
 
 
-def advance_on_circle(radius: float, chord: float, fallback: float=PI2) -> float:
+def advance_on_circle(radius: float, chord: float, fallback: float=math.tau) -> float:
   alpha = chord / (2*radius)
   if not -1 <= alpha <=1: return fallback
   return 2 * math.asin(alpha)
@@ -23,7 +23,7 @@ class OrbitFollowRing:
 
   def add_angle(self, degree: int):
     self.angle += math.radians(degree)
-    self.angle %= PI2
+    self.angle %= math.tau
 
 
 class OrbitFollowElement:
@@ -103,12 +103,12 @@ class OrbitFollow:
       if in_ring >= 2: angle += advance_on_circle(radius, chords[i-1])
       
       total_angle = angle + advance_on_circle(radius, f.size + self.spacing + self.followers[i-in_ring+1].size)
-      if (in_ring > 2 and total_angle > PI2) or i >= max_i:
+      if (in_ring > 2 and total_angle > math.tau) or i >= max_i:
         angle = total_angle
         
         r = self.get_ring(ring)
         r.radius = radius
-        extra = (PI2 - angle) / in_ring
+        extra = (math.tau - angle) / in_ring
         r.angles = [0]
         for ii in range(i-in_ring+1, i):
           r.angles.append(r.angles[-1] + extra + advance_on_circle(r.radius, chords[ii]))
@@ -153,7 +153,7 @@ class OrbitFollow:
       
       overfits = (
         end_i - start_i > 1
-        and angle + advance_on_circle(radius, size + self.spacing + to_add[start_i]) > PI2
+        and angle + advance_on_circle(radius, size + self.spacing + to_add[start_i]) > math.tau
       )
       
       if overfits or end_i >= len(to_add) - 1:
@@ -175,7 +175,7 @@ class OrbitFollow:
         # Create the new ring with every selected followers
         ring = self.get_ring(ring_i)
         ring.radius = radius
-        extra = (PI2 - angle) / (end_i - start_i + 1)
+        extra = (math.tau - angle) / (end_i - start_i + 1)
         angles = [0]
         for i in range(start_i, end_i):
           angles.append(angles[-1] + extra + advance_on_circle(radius, chords[i]))
@@ -230,7 +230,7 @@ class OrbitFollow:
         # Create the new ring with every selected followers
         ring = self.get_ring(ring_i)
         ring.radius = total_radius + biggest
-        step = PI2 / len(in_ring)
+        step = math.tau / len(in_ring)
         ring.angles = [step * i for i in range(len(in_ring))]
         
         # Progress

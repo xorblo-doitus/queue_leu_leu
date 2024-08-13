@@ -2,10 +2,8 @@
 from pygame import Vector2
 import math
 
-PI2 = 2 * math.pi
 
-
-def advance_on_circle(radius: float, chord: float, fallback: float=PI2) -> float:
+def advance_on_circle(radius: float, chord: float, fallback: float=math.tau) -> float:
   alpha: float = chord / (2*radius)
   if not -1 <= alpha <=1: return fallback
   return 2 * math.asin(alpha)
@@ -177,7 +175,7 @@ class ArcFollow:
         self.spacing != self.__last_spacing or 
         total != self.__total_size
     ):
-      self.max_angle = max(min(self.max_angle, PI2), 0.03)
+      self.max_angle = max(min(self.max_angle, math.tau), 0.03)
       self.gap = max(self.gap, 1)
       self.spacing = max(self.spacing, 0)
       self.__last_max_angle = self.max_angle

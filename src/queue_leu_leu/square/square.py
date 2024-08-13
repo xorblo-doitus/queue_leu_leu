@@ -2,8 +2,8 @@
 from pygame import Vector2
 import math
 
+
 SPEED_SCALE = 1 / 8
-PI2 = math.pi * 2
 
 
 class SquareFollowRing:
@@ -14,7 +14,7 @@ class SquareFollowRing:
 
   def add_angle(self, degree: int):
     self.angle += math.radians(degree)
-    self.angle %= PI2
+    self.angle %= math.tau
 
 
 class SquareFollowElement:
@@ -77,7 +77,7 @@ class SquareFollow:
     """Recalculate the rings"""
     ring = 0
     total = 0
-    circumference = PI2 * ((ring + 1) * self.radius)
+    circumference = math.tau * ((ring + 1) * self.radius)
     if ring < len(self.rings): self.rings[ring].sizes.clear()
 
     for i, f in enumerate(self.followers):
@@ -87,7 +87,7 @@ class SquareFollow:
       
       if total > circumference:
         ring += 1
-        circumference = PI2 * ((ring + 1) * self.radius)
+        circumference = math.tau * ((ring + 1) * self.radius)
         total = 0
         if ring < len(self.rings): self.rings[ring].sizes.clear()
       
