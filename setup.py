@@ -21,8 +21,8 @@ def clean_pycache(path="."):
 clean_pycache()
 setup(
   name = 'queue_leu_leu', 
-  version = '1.0', 
-  author = 'ZetaMap', 
+  version = '1.1', 
+  author = 'ZetaMap, xorblo-doitus', 
   description = 'Collection of Python scripts, showing minimal examples of objects following each other.', 
   license = 'MIT', 
   long_description = DOC, 
@@ -44,4 +44,5 @@ setup(
   packages = find_packages("src"),
   package_data = {"": ["**"]},
   install_requires = ["pygame"], 
+  python_requires= '>=3.9',
 )

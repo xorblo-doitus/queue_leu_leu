@@ -3,11 +3,11 @@ Collection of Python scripts, showing minimal examples of objects following each
 
 
 ### Content
-* [arc follow](arc)
-* [joint follow](joint)
-* [orbit follow](orbit)
-* [square follow](square)
-* [trail follow](trail)
+* [arc follow](https://github.com/xorblo-doitus/queue_leu_leu/tree/main/src/queue_leu_leu/arc)
+* [joint follow](https://github.com/xorblo-doitus/queue_leu_leu/tree/main/src/queue_leu_leu/joint)
+* [orbit follow](https://github.com/xorblo-doitus/queue_leu_leu/tree/main/src/queue_leu_leu/orbit)
+* [trail follow](https://github.com/xorblo-doitus/queue_leu_leu/tree/main/src/queue_leu_leu/trail)
+* [polygon follow](https://github.com/xorblo-doitus/queue_leu_leu/tree/main/src/queue_leu_leu/polygon) (this one is a shape editor)
 
 
 ### Installation

@@ -120,7 +120,7 @@ BUILTIN_POLYGONS: dict[str, Polygon] = {
 }
 
 
-def get_closest_point(pos: Vector2, points: list[Vector2]|dict[int, Vector2]) -> tuple[int, float]:
+def get_closest_point(pos: Vector2, points: dict[int, Vector2]) -> tuple[int, float]:
   """Returns (index, distance_squared)"""
   closest_i: int = 0
   closest_distance_squared: float = points[closest_i].distance_squared_to(pos) if isinstance(points, list) else float("inf")
@@ -360,7 +360,7 @@ class Library():
     self._is_open = False
     self._position = Vector2(10, 10)
     self._columns: int = 5
-    self._window: Window|None = None
+    self._window: Window = None
     self.icon_size = 128
     self.follow: PolygonFollow = follow
     self._icons: list[LibraryIcon] = []
@@ -494,7 +494,7 @@ class PolygonFollowExample(PolygonFollow):
       return
     super().check_change()
   
-  def draw(self, surface: Surface, debug: bool|None = None) -> None:
+  def draw(self, surface: Surface, debug: bool = None) -> None:
     if self._editing_polygon:
       self._polygon_editor.draw(surface)
       return
@@ -684,7 +684,8 @@ class PolygonFollowExample(PolygonFollow):
       self._polygon_editor.handle_mouse_up(event)
 
   def handle_mouse_wheel(self, event) -> None:
-    self.rotation_deg += event.y * 5
+    ...
+    #self.rotation_deg += event.y * 5 # do nothing for moment
 
 
 pygame.init()
