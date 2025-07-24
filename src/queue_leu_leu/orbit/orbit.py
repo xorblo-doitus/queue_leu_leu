@@ -2,10 +2,6 @@
 from pygame import Vector2
 import math
 
-
-SPEED_SCALE = 1 / 8
-
-
 def advance_on_circle(radius: float, chord: float, fallback: float=math.tau) -> float:
   alpha = chord / (2*radius)
   if not -1 <= alpha <=1: return fallback
@@ -16,13 +12,15 @@ def regular_polygon_radius(sides: int, side: float) -> float:
 
 
 class OrbitFollowRing:
-  def __init__(self):
+  def __init__(self, i: int):
     self.angle = 0
     self.radius = 1
     self.angles: list[float] = []
+    self.pair = i % 2 == 0
 
   def add_angle(self, degree: int):
-    self.angle += math.radians(degree)
+    if self.pair: self.angle += math.radians(degree)
+    else: self.angle -= math.radians(degree)
     self.angle %= math.tau
 
 
@@ -63,8 +61,7 @@ class OrbitFollow:
     if not self.rings: return
     
     # Update rings angle
-    for i in range(len(self.rings)):
-      self.rings[i].add_angle((self.speed if i % 2 else -self.speed) * SPEED_SCALE)
+    for i in range(len(self.rings)): self.rings[i].add_angle(self.speed)
     
     # Update followers
     i = 0
@@ -249,21 +246,18 @@ class OrbitFollow:
   def check_rings(self):
     """Recalculate the rings if .gap, .spacing or a follower size has been changed"""
     total = sum(f.size for f in self.followers)
-    if (self.gap != self.__last_gap or 
+    if (self.speed != self.__last_speed or
+        self.gap != self.__last_gap or 
         self.spacing != self.__last_spacing or 
         total != self.__total_size
     ):
       self.gap = max(self.gap, 1)
-      self.__last_gap = self.gap
       self.spacing = max(self.spacing, 0)
+      self.__last_gap = self.gap
+      self.__last_speed = self.speed
       self.__last_spacing = self.spacing
       self.__total_size = total
       self.adapt_rings()
-    
-    # Clamp the speed
-    if self.__last_speed != self.speed:
-      self.speed = int(max(min(self.speed, 180 / SPEED_SCALE), -180 / SPEED_SCALE))
-      self.__last_speed = self.speed
 
   def add_follower(self, follower: OrbitFollowElement):
     """Add a new follower in the rings"""
@@ -284,6 +278,6 @@ class OrbitFollow:
   
   def get_ring(self, i: int) -> OrbitFollowRing:
     """Create missing rings if needed and return the requested one"""
-    for _ in range(i-len(self.rings)+1):
-      self.rings.append(OrbitFollowRing())
+    for ii in range(i-len(self.rings)+1):
+      self.rings.append(OrbitFollowRing(i+ii))
     return self.rings[i]

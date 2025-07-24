@@ -1,9 +1,7 @@
-try: from .orbit import OrbitFollow, OrbitFollowElement, SPEED_SCALE
+try: from .orbit import OrbitFollow, OrbitFollowElement
 except ImportError:
-  from orbit import OrbitFollow, OrbitFollowElement, SPEED_SCALE
+  from orbit import OrbitFollow, OrbitFollowElement
 import pygame, random, math
-
-SPEED_SCALE_RATIO = SPEED_SCALE.as_integer_ratio()
 
 
 class OrbitFollowExample(OrbitFollow):
@@ -24,7 +22,7 @@ class OrbitFollowExample(OrbitFollow):
         "Spacing   "+str(self.spacing),
         "Gap       "+str(self.gap),
         "Mode      "+str(OrbitFollowExample.adapter_names[self.adapt_rings.__func__]),
-        "Speed     "+str(self.speed)+" / "+str(SPEED_SCALE_RATIO[1]),
+        "Speed     "+str(self.speed),
         "Angles    "+", ".join(str(int(math.degrees(i.angle))).rjust(3) for i in self.rings),
         "Rings     "+", ".join(str(i.radius).rjust(3) for i in self.rings),
       )
@@ -66,11 +64,11 @@ class OrbitFollowExample(OrbitFollow):
       return True
 
     elif keys[pygame.K_UP]:
-      self.speed += 2
+      self.speed += 1
       return True
 
     elif keys[pygame.K_DOWN]:
-      self.speed -= 2
+      self.speed -= 1
       return True
 
     elif keys[pygame.K_RIGHT]:
@@ -94,7 +92,7 @@ window = pygame.display.set_mode((500, 500), pygame.RESIZABLE)
 clock = pygame.time.Clock()
 font = pygame.font.SysFont('Consolas', 16)
 
-orbit = OrbitFollowExample(16, 24, 2, OrbitFollowElement(pygame.Vector2(100, 100), 5))
+orbit = OrbitFollowExample(16, 24, 1, OrbitFollowElement(pygame.Vector2(100, 100), 5))
 run = True
 while run:
     clock.tick(60)

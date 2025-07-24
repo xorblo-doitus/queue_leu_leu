@@ -23,14 +23,14 @@ class ArcFollowExample(ArcFollow):
       for i, t in enumerate(things):
         window.blit(font.render(t, False, 0xffffffff), (10, 10+20*i))
 
-    for i, f in enumerate(self.followers):
-      pygame.draw.circle(window, (0, 255*i/fsize, 255), f.pos, f.size)
-      if debug:
+      for i, f in enumerate(self.followers):
+        pygame.draw.circle(window, (0, 255*i/fsize, 255), f.pos, f.size)
         pygame.draw.circle(window, (255, 0, 0), f.pos, 3)
-    
-    if debug:
-      pygame.draw.line(window, (255, 0, 0), self.leader.pos, self.leader.pos + Vector2_polar((self.rings[-1].radius if self.rings else 0)+100, self.rotation), 2)
-      pygame.draw.line(window, (255, 0, 0), self.leader.pos, self.leader.pos + Vector2_polar((self.rings[-1].radius if self.rings else 0)+100, self.rotation + self.max_angle), 2)
+        
+      half = self.max_angle / 2
+      size = (self.rings[-1].radius if self.rings else 0)+100
+      pygame.draw.line(window, (255, 0, 0), self.leader.pos, self.leader.pos + Vector2_polar(size, self.rotation - half), 2)
+      pygame.draw.line(window, (255, 0, 0), self.leader.pos, self.leader.pos + Vector2_polar(size, self.rotation + half), 2)
       
       for ring in self.rings:
         pygame.draw.circle(window, (100, 100, 0), self.leader.pos, ring.radius, 1)
@@ -38,10 +38,14 @@ class ArcFollowExample(ArcFollow):
           window,
           (255, 255, 0),
           (self.leader.pos.x - ring.radius, self.leader.pos.y - ring.radius, 2*ring.radius, 2*ring.radius),
-          -self.max_angle-self.rotation,
-          -self.rotation,
+          -self.rotation-half,
+          -self.rotation+half,
           1
         )
+        
+    else:
+      for i, f in enumerate(self.followers):
+        pygame.draw.circle(window, (0, 255*i/fsize, 255), f.pos, f.size)
     
     pygame.draw.circle(window, (255, 0, 0), self.leader.pos, self.leader.size)
 

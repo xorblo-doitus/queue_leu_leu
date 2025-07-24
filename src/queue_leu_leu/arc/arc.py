@@ -9,7 +9,7 @@ def advance_on_circle(radius: float, chord: float, fallback: float=math.tau) -> 
   return 2 * math.asin(alpha)
 
 def Vector2_polar(magnitude: float, angle_rad: float) -> Vector2:
-  return magnitude * Vector2(math.cos(angle_rad), math.sin(angle_rad))
+  return Vector2(magnitude * math.cos(angle_rad), magnitude * math.sin(angle_rad))
 
 def get_edge_angle(radius: float, distance: float, fallback: float=0) -> float:
   alpha = distance/radius
@@ -89,8 +89,8 @@ class ArcFollow:
     ring_i = start_i = last_biggest = 0
     end_i = -1
     total_radius = max(1, self.gap + self.leader.size)
-    biggest = to_add[0]
-    angle = get_edge_angle(total_radius + biggest, to_add[start_i])
+    biggest = to_add[0] if to_add else 0
+    angle = get_edge_angle(total_radius + biggest, biggest)
     
     while end_i < len(to_add) - 1:
       end_i += 1
@@ -142,14 +142,14 @@ class ArcFollow:
         
         # Choose repartition
         if end_i == start_i:
-          ring.angles = [self.max_angle/2]
+          ring.angles = [0]
         elif self.uniform:
           extra = (self.max_angle - angle) / (end_i - start_i)
-          ring.angles = [get_edge_angle(new_radius, to_add[start_i])]
+          ring.angles = [get_edge_angle(new_radius, to_add[start_i]) - self.max_angle/2]
           for i in range(start_i, end_i):
             ring.angles.append(ring.angles[-1] + extra + advance_on_circle(ring.radius, chords[i]))
         else:
-          ring.angles = [(self.max_angle - angle) / 2 + advance_on_circle(ring.radius, to_add[start_i])]
+          ring.angles = [(self.max_angle - angle) / 2 + advance_on_circle(ring.radius, to_add[start_i]) - self.max_angle/2]
           for i in range(start_i, end_i):
             ring.angles.append(ring.angles[-1] + advance_on_circle(ring.radius, chords[i]))
         
@@ -162,7 +162,7 @@ class ArcFollow:
         if start_i < len(to_add):
           biggest = to_add[start_i]
           last_biggest = 0
-          angle = advance_on_circle(total_radius + biggest, to_add[start_i])
+          angle = advance_on_circle(total_radius + biggest, biggest)
     
     # Remove empty rings
     self.rings = self.rings[:ring_i]
