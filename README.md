@@ -24,4 +24,4 @@ The rest, is just to visualize the algorithms with more informations.
 
 
 ### Contributors
-[@ZetaMap](https://github.com/ZetaMap) and [@xorblo-doitus](https://github.com/xorblo-doitus)
+[@ZetaMap](https://github.com/ZetaMap) and [@Patou-todoG](https://github.com/Patou-todoG)
